@@ -7,7 +7,7 @@ require('dotenv').config();
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET;
-/*
+
 // User Registration Route
 router.post('/register', async (req, res) => {
   const { email, password } = req.body;
@@ -34,7 +34,7 @@ router.post('/register', async (req, res) => {
     res.status(500).json({ message: 'Server error', error });
   }
 });
-*/
+
 // User Login Route
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
