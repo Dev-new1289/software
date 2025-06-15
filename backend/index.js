@@ -19,7 +19,11 @@ const app = express();
 app.use(express.json()); // Must be before routes
 
 // Enable CORS
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
 
 // Middleware to parse JSON request bodies
 app.use(bodyParser.json());
