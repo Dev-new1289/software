@@ -1,0 +1,42 @@
+const cors = require('cors');
+const express = require('express');
+const bodyParser = require('body-parser');
+const userRoutes = require('./routes/userRoute');
+const saleRoutes= require('./routes/salesRoute');
+const customerRoutes = require('./routes/customer');
+const inventoryRoutes = require('./routes/inventories');
+const cashRoutes = require('./routes/cash');
+const ledgerRoutes = require('./routes/ledger');
+const incomeRoutes = require('./routes/income');
+
+
+
+const connectDB = require('./config/db');
+require('dotenv').config();
+
+const app = express();
+
+app.use(express.json()); // Must be before routes
+
+// Enable CORS
+app.use(cors());
+
+// Middleware to parse JSON request bodies
+app.use(bodyParser.json());
+
+// Use the user routes
+app.use('/api/users', userRoutes);
+app.use('/api/sales', saleRoutes);
+app.use('/api/customers', customerRoutes);
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/cash', cashRoutes);
+app.use('/api/ledger', ledgerRoutes); 
+app.use('/api/income', incomeRoutes);
+
+// Connect to MongoDB
+connectDB();
+
+// Start the server
+app.listen(5000, () => {
+  console.log('Server running on port 5000');
+});
