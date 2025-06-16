@@ -16,7 +16,7 @@ require('dotenv').config();
 
 const app = express();
 
-app.use(express.json()); // Must be before routes
+
 const allowedOrigin = process.env.FRONTEND_URL;
 
 app.use(cors({
@@ -38,6 +38,7 @@ app.options('*', cors({
   credentials: true
 }));
 
+app.use(express.json()); // Must be before routes
 // Middleware to parse JSON request bodies
 app.use(bodyParser.json());
 
