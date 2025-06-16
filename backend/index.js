@@ -17,21 +17,26 @@ require('dotenv').config();
 const app = express();
 
 app.use(express.json()); // Must be before routes
+const allowedOrigin = process.env.FRONTEND_URL;
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL, // no fallback to '*'
+  origin: function (origin, callback) {
+    if (!origin || origin === allowedOrigin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true
 }));
 
-// Handle OPTIONS (for preflight)
+// Preflight handling
 app.options('*', cors({
-  origin: process.env.FRONTEND_URL,
+  origin: allowedOrigin,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true
 }));
-
-
 
 // Middleware to parse JSON request bodies
 app.use(bodyParser.json());
