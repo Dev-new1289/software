@@ -9,7 +9,7 @@ import {
   Typography,
 } from "@mui/material";
 
-export default function ItemsTable({ items, onChangeItem }) {
+export default function ItemsTable({ items, onChangeItem, onTabFromTable }) {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -52,8 +52,27 @@ export default function ItemsTable({ items, onChangeItem }) {
         e.preventDefault();
         setSelectedCell((prev) => ({
           row: prev.row,
-          col: Math.min(2, prev.col + 1),
+          col: Math.min(1, prev.col + 1), // Only 2 columns (qty and rate)
         }));
+        break;
+      case "Tab":
+      case "Enter":
+        e.preventDefault();
+        // If we're at the last editable cell, move to next field
+        if (rowIndex === items.length - 1 && colIndex === 1) {
+          if (onTabFromTable) {
+            onTabFromTable();
+          }
+        } else {
+          // Move to next cell
+          if (colIndex === 1) {
+            // Move to next row, first column
+            setSelectedCell({ row: rowIndex + 1, col: 0 });
+          } else {
+            // Move to next column
+            setSelectedCell({ row: rowIndex, col: colIndex + 1 });
+          }
+        }
         break;
       default:
         break;
@@ -130,7 +149,14 @@ export default function ItemsTable({ items, onChangeItem }) {
               onChange={(e) => onChangeItem(rowIndex, "qty", e.target.value)}
               size="small"
               fullWidth
-              inputRef={(el) => (inputRefs.current[rowIndex] = [el])}
+              data-item-row={rowIndex}
+              data-field="qty"
+              inputRef={(el) => {
+                if (!inputRefs.current[rowIndex]) {
+                  inputRefs.current[rowIndex] = [];
+                }
+                inputRefs.current[rowIndex][0] = el;
+              }}
               onKeyDown={(e) => handleKeyDown(e, rowIndex, 0)}
               inputProps={{
                 style: { textAlign: "center" },
@@ -154,7 +180,14 @@ export default function ItemsTable({ items, onChangeItem }) {
               onChange={(e) => onChangeItem(rowIndex, "rate", e.target.value)}
               size="small"
               fullWidth
-              inputRef={(el) => (inputRefs.current[rowIndex][1] = el)}
+              data-item-row={rowIndex}
+              data-field="rate"
+              inputRef={(el) => {
+                if (!inputRefs.current[rowIndex]) {
+                  inputRefs.current[rowIndex] = [];
+                }
+                inputRefs.current[rowIndex][1] = el;
+              }}
               onKeyDown={(e) => handleKeyDown(e, rowIndex, 1)}
               inputProps={{
                 style: { textAlign: "center" },

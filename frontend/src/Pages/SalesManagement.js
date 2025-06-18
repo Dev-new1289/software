@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, Snackbar, Pagination } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
-import { fetchAllSales, getSaleById, getNextSaleId } from '../api';
+import { fetchAllSales, getSaleById, getNextSaleId, getCustomers, getInventory } from '../api';
 import GenericTable from './components/GenericTable';
 import SearchBar from './components/SearchBar';
 import SortControl from './components/SortControl';
@@ -19,6 +19,8 @@ const SalesManagement = () => {
   const [error, setError] = useState('');
   const [pagination, setPagination] = useState({ page: 1, limit: 10, totalPages: 1 });
   const [invNo, setInvoiceNo] = useState(0);
+  const [customers, setCustomers] = useState([]);
+  const [inventory, setInventory] = useState([]);
 
   const refreshSalesList = async () => {
     try {
@@ -46,9 +48,27 @@ const SalesManagement = () => {
     }
   };
 
+  const loadCustomersAndInventory = async () => {
+    try {
+      const [customersResponse, inventoryResponse] = await Promise.all([
+        getCustomers(),
+        getInventory()
+      ]);
+      
+      setCustomers(customersResponse.customers || []);
+      setInventory(inventoryResponse || []);
+    } catch (error) {
+      setError(error.message || 'Failed to load customers and inventory data');
+    }
+  };
+
   useEffect(() => {
     refreshSalesList();
   }, [pagination.page, pagination.limit]);
+
+  useEffect(() => {
+    loadCustomersAndInventory();
+  }, []);
 
   useEffect(() => {
     let updatedList = [...filteredSalesList];
@@ -120,6 +140,7 @@ const SalesManagement = () => {
     setOpenDialog(false);
     setEditingSale(null);
     refreshSalesList();
+    loadCustomersAndInventory();
   };
 
   const salesColumns = [
@@ -189,6 +210,8 @@ const SalesManagement = () => {
         onClose={handleDialogClose}
         invNo={invNo}
         editingSale={editingSale}
+        customers={customers}
+        inventory={inventory}
       />
 
       <Snackbar open={Boolean(error)} message={error} autoHideDuration={6000} onClose={() => setError('')} />

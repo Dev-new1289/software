@@ -19,8 +19,9 @@ import {
   Snackbar,
   Alert,
   TableSortLabel,
+  Grid,
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Save as SaveIcon, Cancel as CancelIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Save as SaveIcon, Cancel as CancelIcon, Close as CloseIcon } from '@mui/icons-material';
 import { fetchAllInventory, addInventory, editInventory, deleteInventory } from '../api';
 import SearchBar from './components/SearchBar';
 import SortControl from './components/SortControl';
@@ -422,62 +423,268 @@ const InventoryManagement = () => {
         </Table>
       </TableContainer>
 
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {editingItem ? 'Edit Inventory Item' : 'Add New Inventory Item'}
+      <Dialog 
+        open={openDialog} 
+        onClose={handleCloseDialog} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+            maxHeight: '90vh',
+            overflow: 'hidden',
+            mt: 2,
+            mx: 2
+          }
+        }}
+      >
+        <DialogTitle 
+          sx={{ 
+            pb: 1,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            borderBottom: '1px solid',
+            borderColor: 'divider'
+          }}
+        >
+          <Typography variant="h5" component="div" sx={{ fontWeight: 600 }}>
+            {editingItem ? 'Edit Inventory Item' : 'Add New Inventory Item'}
+          </Typography>
+          <IconButton
+            onClick={handleCloseDialog}
+            size="small"
+            sx={{ 
+              color: 'text.secondary',
+              '&:hover': { 
+                backgroundColor: 'action.hover',
+                color: 'text.primary'
+              }
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
         </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-            <TextField
-              name="length"
-              label="Length"
-              value={formData.length}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              name="gauge"
-              label="Gauge"
-              value={formData.gauge}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              name="net_rate"
-              label="Net Rate"
-              type="number"
-              value={formData.net_rate}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              name="cost"
-              label="Cost"
-              type="number"
-              value={formData.cost}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              name="sequence"
-              label="Sequence"
-              value={formData.sequence}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              name="stock"
-              label="Stock"
-              type="number"
-              value={formData.stock}
-              onChange={handleInputChange}
-              fullWidth
-            />
+        
+        <DialogContent 
+          sx={{ 
+            pt: 4,
+            pb: 2,
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              backgroundColor: 'rgba(0, 0, 0, 0.05)',
+              borderRadius: '4px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: 'rgba(0, 0, 0, 0.2)',
+              borderRadius: '4px',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              },
+            },
+          }}
+        >
+          <Box component="form" sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      fontWeight: 700,
+                      color: 'text.primary',
+                      fontSize: '1.2rem',
+                      mb: 0.5
+                    }}
+                  >
+                    Length
+                  </Typography>
+                  <TextField
+                    name="length"
+                    variant="outlined"
+                    fullWidth
+                    size="small"
+                    value={formData.length}
+                    onChange={handleInputChange}
+                    placeholder="Enter length"
+                    InputLabelProps={{ shrink: false }}
+                  />
+                </Box>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      fontWeight: 700,
+                      color: 'text.primary',
+                      fontSize: '1.2rem',
+                      mb: 0.5
+                    }}
+                  >
+                    Gauge
+                  </Typography>
+                  <TextField
+                    name="gauge"
+                    variant="outlined"
+                    fullWidth
+                    size="small"
+                    value={formData.gauge}
+                    onChange={handleInputChange}
+                    placeholder="Enter gauge"
+                    InputLabelProps={{ shrink: false }}
+                  />
+                </Box>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      fontWeight: 700,
+                      color: 'text.primary',
+                      fontSize: '1.2rem',
+                      mb: 0.5
+                    }}
+                  >
+                    Net Rate
+                  </Typography>
+                  <TextField
+                    name="net_rate"
+                    type="number"
+                    variant="outlined"
+                    fullWidth
+                    size="small"
+                    value={formData.net_rate}
+                    onChange={handleInputChange}
+                    placeholder="Enter net rate"
+                    InputLabelProps={{ shrink: false }}
+                  />
+                </Box>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      fontWeight: 700,
+                      color: 'text.primary',
+                      fontSize: '1.2rem',
+                      mb: 0.5
+                    }}
+                  >
+                    Cost
+                  </Typography>
+                  <TextField
+                    name="cost"
+                    type="number"
+                    variant="outlined"
+                    fullWidth
+                    size="small"
+                    value={formData.cost}
+                    onChange={handleInputChange}
+                    placeholder="Enter cost"
+                    InputLabelProps={{ shrink: false }}
+                  />
+                </Box>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      fontWeight: 700,
+                      color: 'text.primary',
+                      fontSize: '1.2rem',
+                      mb: 0.5
+                    }}
+                  >
+                    Sequence
+                  </Typography>
+                  <TextField
+                    name="sequence"
+                    variant="outlined"
+                    fullWidth
+                    size="small"
+                    value={formData.sequence}
+                    onChange={handleInputChange}
+                    placeholder="Enter sequence"
+                    InputLabelProps={{ shrink: false }}
+                  />
+                </Box>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      fontWeight: 700,
+                      color: 'text.primary',
+                      fontSize: '1.2rem',
+                      mb: 0.5
+                    }}
+                  >
+                    Stock
+                  </Typography>
+                  <TextField
+                    name="stock"
+                    type="number"
+                    variant="outlined"
+                    fullWidth
+                    size="small"
+                    value={formData.stock}
+                    onChange={handleInputChange}
+                    placeholder="Enter stock quantity"
+                    InputLabelProps={{ shrink: false }}
+                  />
+                </Box>
+              </Grid>
+            </Grid>
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSave} variant="contained" color="primary">
+        
+        <DialogActions 
+          sx={{ 
+            px: 3, 
+            py: 2, 
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            gap: 1
+          }}
+        >
+          <Button 
+            onClick={handleCloseDialog} 
+            variant="outlined"
+            sx={{ 
+              minWidth: 80,
+              textTransform: 'none',
+              fontWeight: 500
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSave} 
+            color="primary" 
+            variant="contained"
+            sx={{ 
+              minWidth: 80,
+              textTransform: 'none',
+              fontWeight: 500,
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+              '&:hover': {
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+              }
+            }}
+          >
             Save
           </Button>
         </DialogActions>

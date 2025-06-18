@@ -363,11 +363,15 @@ router.get('/id', async (req, res) => {
                                 model: AreaGroup
                             }
                         }
-                    });
+                    })
+                    .sort({ sale_id: -1 }); // Sort by sale_id in descending order
             }
         }
 
         if (sales.length > 0) {
+            // Sort sales by sale_id in descending order (most recent first)
+            sales.sort((a, b) => b.sale_id - a.sale_id);
+            
             const formattedSalesData = sales.map(sale => {
                 const customer = sale.cust_id;
 

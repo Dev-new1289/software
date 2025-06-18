@@ -158,12 +158,19 @@ router.get('/:customerId/details', async (req, res) => {
 
 
     try {
-      const customer = await Customer.findById(customerId).populate('area_id');
+      const customer = await Customer.findById(customerId).populate({
+        path: 'area_id',
+        populate: {
+          path: 'group_id',
+          model: 'AreaGroup'
+        }
+      });
       if (!customer) {
         return res.status(404).json({ message: 'Customer not found' });
       }
   
-      const areaName = customer.area_id ? customer.area_id.area_name : '';
+      const areaName = customer.area_id ? 
+        `${customer.area_id.area_name} ${customer.area_id.group_id.area_group}` : '';
   
       const previousBalanceData = await getCustomerBalance(customerId, date, invoiceId);
   

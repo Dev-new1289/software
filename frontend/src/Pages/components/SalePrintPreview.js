@@ -26,7 +26,43 @@ export default function SalePrintPreview({ open, onClose, saleData, onPrint }) {
     calculatePages();
   }, [items]);
 
+  // Handle keyboard scroll navigation
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (!open) return;
+
+      const dialogContent = document.querySelector('[role="dialog"] .MuiDialogContent-root');
+      if (!dialogContent) return;
+
+      switch (event.key) {
+        case 'ArrowUp':
+          event.preventDefault();
+          dialogContent.scrollTop -= 50; // Scroll up by 50px
+          break;
+        case 'ArrowDown':
+          event.preventDefault();
+          dialogContent.scrollTop += 50; // Scroll down by 50px
+          break;
+        case 'Escape':
+          event.preventDefault();
+          onClose();
+          break;
+      }
+    };
+
+    if (open) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open, onClose]);
+
   const handlePrint = () => {
+    // Close the dialog immediately when print is clicked
+    onClose();
+    
     const content = `
       <!DOCTYPE html>
       <html>
@@ -337,7 +373,7 @@ export default function SalePrintPreview({ open, onClose, saleData, onPrint }) {
         }
       }}
     >
-      <DialogTitle sx={{ p: 1 }}>Print Preview</DialogTitle>
+      <DialogTitle sx={{ p: 1 }}></DialogTitle>
       <DialogContent sx={{ 
         p: 0, 
         overflow: 'auto',

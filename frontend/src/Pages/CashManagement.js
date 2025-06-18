@@ -18,7 +18,20 @@ const CashManagement = () => {
   const [customers, setCustomers] = useState([]);
   const [newCashData, setNewCashData] = useState({ 
     inv_no: '', 
-    date: new Date().toISOString().split('T')[0],
+    date: (() => {
+      const now = new Date();
+      const karachiTime = new Date(
+        now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' })
+      );
+      
+      const year = karachiTime.getFullYear();
+      const month = String(karachiTime.getMonth() + 1).padStart(2, '0');
+      const day = String(karachiTime.getDate()).padStart(2, '0');
+      const hours = String(karachiTime.getHours()).padStart(2, '0');
+      const minutes = String(karachiTime.getMinutes()).padStart(2, '0');
+      
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    })(),
     cust_id: '', 
     amount: 0, 
     detail: '' 
@@ -78,6 +91,7 @@ const CashManagement = () => {
         const customersResponse = await getCustomers();
         if (customersResponse && customersResponse.customers) {
           setCustomers(customersResponse.customers);
+          console.log(customersResponse.customers);
         }
       } catch (error) {
         setError(error.message || 'Failed to fetch customers');
@@ -142,18 +156,69 @@ const CashManagement = () => {
 
   const handleOpenDialog = (cashData = null) => {
     if (cashData) {
+      // Safely convert the date to ISO format for datetime-local input
+      let dateValue;
+      try {
+        const date = new Date(cashData.date);
+        if (isNaN(date.getTime())) {
+          // If date is invalid, use current date
+          const now = new Date();
+          const karachiTime = new Date(
+            now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' })
+          );
+          
+          const year = karachiTime.getFullYear();
+          const month = String(karachiTime.getMonth() + 1).padStart(2, '0');
+          const day = String(karachiTime.getDate()).padStart(2, '0');
+          const hours = String(karachiTime.getHours()).padStart(2, '0');
+          const minutes = String(karachiTime.getMinutes()).padStart(2, '0');
+          
+          dateValue = `${year}-${month}-${day}T${hours}:${minutes}`;
+        } else {
+          dateValue = date.toISOString().slice(0, 16);
+        }
+      } catch (error) {
+        console.error('Date conversion error:', error);
+        const now = new Date();
+        const karachiTime = new Date(
+          now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' })
+        );
+        
+        const year = karachiTime.getFullYear();
+        const month = String(karachiTime.getMonth() + 1).padStart(2, '0');
+        const day = String(karachiTime.getDate()).padStart(2, '0');
+        const hours = String(karachiTime.getHours()).padStart(2, '0');
+        const minutes = String(karachiTime.getMinutes()).padStart(2, '0');
+        
+        dateValue = `${year}-${month}-${day}T${hours}:${minutes}`;
+      }
+
       setNewCashData({
         inv_no: cashData.inv_no,
-        date: new Date(cashData.date).toISOString().slice(0, 16),
+        date: dateValue,
         cust_id: cashData.cust_id._id,
         customer_name: formatCustomerName(cashData.cust_id),
         amount: cashData.amount,
         detail: cashData.detail
       });
     } else {
+      // For new cash entry, use current Karachi time
+      const now = new Date();
+      const karachiTime = new Date(
+        now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' })
+      );
+      
+      const year = karachiTime.getFullYear();
+      const month = String(karachiTime.getMonth() + 1).padStart(2, '0');
+      const day = String(karachiTime.getDate()).padStart(2, '0');
+      const hours = String(karachiTime.getHours()).padStart(2, '0');
+      const minutes = String(karachiTime.getMinutes()).padStart(2, '0');
+      
+      const currentDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+
       setNewCashData({ 
         inv_no: invNo, 
-        date: new Date().toISOString().slice(0, 16),
+        date: currentDateTime,
         cust_id: '', 
         customer_name: '',
         amount: 0, 
@@ -181,10 +246,23 @@ const CashManagement = () => {
         throw new Error('Please select a valid customer');
       }
 
+      // Safely convert the date to ISO format
+      let dateValue;
+      try {
+        const date = new Date(cashData.date);
+        if (isNaN(date.getTime())) {
+          throw new Error('Invalid date format');
+        }
+        dateValue = date.toISOString();
+      } catch (error) {
+        console.error('Date conversion error:', error);
+        throw new Error('Invalid date format. Please select a valid date and time.');
+      }
+
       const cashDataToSave = {
         ...cashData,
         cust_id: selectedCustomer._id,
-        date: new Date(cashData.date).toISOString()
+        date: dateValue
       };
 
       if (editingCashData) {
@@ -333,21 +411,46 @@ const CashManagement = () => {
         data={newCashData}
         onSave={handleSaveCashData}
         fields={[
-          { name: 'inv_no', label: 'Invoice No', type: 'number', readOnly: true },
-          { name: 'date', label: 'Date & Time', type: 'datetime-local' },
+          { 
+            name: 'inv_no', 
+            label: 'Invoice No', 
+            type: 'number', 
+            readOnly: true,
+            size: 'small'
+          },
+          { 
+            name: 'date', 
+            label: 'Date & Time', 
+            type: 'datetime-local',
+            size: 'medium'
+          },
           { 
             name: 'customer_name', 
             label: 'Customer Name',
             type: 'select',
+            size: 'medium',
             options: customers.map(customer => ({
               value: formatCustomerName(customer),
               label: formatCustomerName(customer)
             }))
           },
-          { name: 'amount', label: 'Amount', type: 'number' },
-          { name: 'detail', label: 'Detail' },
+          { 
+            name: 'amount', 
+            label: 'Amount', 
+            type: 'number',
+            size: 'small',
+            startAdornment: 'RS '
+          },
+          { 
+            name: 'detail', 
+            label: 'Detail',
+            multiline: true,
+            rows: 3,
+            helperText: 'Enter payment details or remarks'
+          },
         ]}
         title={editingCashData ? 'Edit Cash Entry' : 'Add Cash Entry'}
+        maxWidth="md"
       />
 
       {/* Delete Confirmation Dialog */}
@@ -361,12 +464,16 @@ const CashManagement = () => {
             name: 'confirmation',
             label: `Are you sure you want to delete cash entry for invoice "${cashDataToDelete?.inv_no}"?`,
             type: 'text',
-            readOnly: true
+            readOnly: true,
+            multiline: true,
+            rows: 2,
+            helperText: 'This action cannot be undone'
           }
         ]}
         onSave={handleDeleteConfirm}
         saveButtonText="Delete"
         saveButtonColor="error"
+        maxWidth="sm"
       />
 
       {/* Bulk Cash Entry Dialog */}

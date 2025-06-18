@@ -15,15 +15,222 @@ import {
   Snackbar,
   Alert,
   DialogContentText,
+  useTheme,
+  useMediaQuery,
+  Paper,
 } from "@mui/material";
 
 import LabelledInput from "./LabelledInput";
-import { getCustomers, getInventory, getCustomerDetails, saveSale, editSale, getSaleItems } from "../../api"; // Import the new API function
-import ItemsTable from "./ItemsTable"; // Import the ItemsTable component
+import { getCustomerDetails, saveSale, editSale, getSaleItems } from "../../api"; // Import the new API function
 import SalePrintPreview from "./SalePrintPreview";
 import { parseDDMMYYYYToISO } from '../../utils/dateUtils';
 
-export default function AddSaleDialog({ open, onClose, invNo, editingSale }) {
+// ItemsTable component moved into the same file
+function ItemsTable({ items, onChangeItem, onTabFromTable }) {
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+
+  // State for tracking the currently selected cell
+  const [selectedCell, setSelectedCell] = useState({ row: 0, col: 0 });
+  const inputRefs = React.useRef([]); // Refs for input fields
+
+  // Focus the selected cell whenever it changes
+  useEffect(() => {
+    if (inputRefs.current[selectedCell.row]?.[selectedCell.col]) {
+      inputRefs.current[selectedCell.row][selectedCell.col].focus();
+    }
+  }, [selectedCell]);
+
+  // Handle keyboard navigation
+  const handleKeyDown = (e, rowIndex, colIndex) => {
+    switch (e.key) {
+      case "ArrowUp":
+        e.preventDefault();
+        setSelectedCell((prev) => ({
+          row: Math.max(0, prev.row - 1),
+          col: prev.col,
+        }));
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        setSelectedCell((prev) => ({
+          row: Math.min(items.length - 1, prev.row + 1),
+          col: prev.col,
+        }));
+        break;
+      case "ArrowLeft":
+        e.preventDefault();
+        setSelectedCell((prev) => ({
+          row: prev.row,
+          col: Math.max(0, prev.col - 1),
+        }));
+        break;
+      case "ArrowRight":
+        e.preventDefault();
+        setSelectedCell((prev) => ({
+          row: prev.row,
+          col: Math.min(1, prev.col + 1), // Only 2 columns (qty and rate)
+        }));
+        break;
+      case "Tab":
+      case "Enter":
+        e.preventDefault();
+        
+          if (onTabFromTable) {
+            onTabFromTable();
+          }
+        
+        break;
+      default:
+        break;
+    }
+  };
+
+  return (
+    <Box
+      sx={{
+        maxHeight: 400,
+        overflowY: "auto",
+        border: "1px solid",
+        borderColor: "divider",
+        borderRadius: 1,
+        p: 1,
+      }}
+    >
+      {/* Header Row */}
+      <Grid container spacing={1} sx={{ mb: 1 }}>
+        <Grid item xs={5}>
+          <Typography variant="subtitle2" fontWeight="bold">
+            Item Description
+          </Typography>
+        </Grid>
+        <Grid item xs={2}>
+          <Typography variant="subtitle2" fontWeight="bold" align="center">
+            Qty
+          </Typography>
+        </Grid>
+        <Grid item xs={2}>
+          <Typography variant="subtitle2" fontWeight="bold" align="center">
+            Rate
+          </Typography>
+        </Grid>
+        <Grid item xs={3}>
+          <Typography variant="subtitle2" fontWeight="bold" align="right">
+            Amount
+          </Typography>
+        </Grid>
+      </Grid>
+
+      {/* Data Rows */}
+      {items.map((row, rowIndex) => (
+        <Grid
+          container
+          spacing={1}
+          key={rowIndex}
+          sx={{
+            mb: 1,
+            backgroundColor:
+              selectedCell.row === rowIndex ? "action.hover" : "background.paper",
+            borderRadius: 1,
+            p: 1,
+          }}
+        >
+          {/* Item Description */}
+          <Grid item xs={5}>
+            <Box
+              sx={{
+                p: 1,
+                backgroundColor: "background.default",
+                borderRadius: 1,
+              }}
+            >
+              <Typography variant="body2">{row.itemDescription}</Typography>
+            </Box>
+          </Grid>
+
+          {/* Quantity */}
+          <Grid item xs={2} sx={{ minWidth: isSmallScreen ? '65px' : 'auto' }}>
+            <TextField
+              type="number"
+              value={row.qty || ""}
+              onChange={(e) => onChangeItem(rowIndex, "qty", e.target.value)}
+              size="small"
+              fullWidth
+              data-item-row={rowIndex}
+              data-field="qty"
+              inputRef={(el) => {
+                if (!inputRefs.current[rowIndex]) {
+                  inputRefs.current[rowIndex] = [];
+                }
+                inputRefs.current[rowIndex][0] = el;
+              }}
+              onKeyDown={(e) => handleKeyDown(e, rowIndex, 0)}
+              inputProps={{
+                style: { textAlign: "center" },
+                "aria-label": `Quantity for ${row.itemDescription}`,
+              }}
+              sx={{
+                backgroundColor:
+                  selectedCell.row === rowIndex && selectedCell.col === 0
+                    ? "action.selected"
+                    : "background.paper",
+              }}
+            />
+          </Grid>
+
+          {/* Rate */}
+          <Grid item xs={2} sx={{ minWidth: isSmallScreen ? '65px' : 'auto' }}>
+            <TextField
+              type="number"
+              step="0.01"
+              value={row.rate || ""}
+              onChange={(e) => onChangeItem(rowIndex, "rate", e.target.value)}
+              size="small"
+              fullWidth
+              data-item-row={rowIndex}
+              data-field="rate"
+              inputRef={(el) => {
+                if (!inputRefs.current[rowIndex]) {
+                  inputRefs.current[rowIndex] = [];
+                }
+                inputRefs.current[rowIndex][1] = el;
+              }}
+              onKeyDown={(e) => handleKeyDown(e, rowIndex, 1)}
+              inputProps={{
+                style: { textAlign: "center" },
+                "aria-label": `Rate for ${row.itemDescription}`,
+              }}
+              sx={{
+                backgroundColor:
+                  selectedCell.row === rowIndex && selectedCell.col === 1
+                    ? "action.selected"
+                    : "background.paper",
+              }}
+            />
+          </Grid>
+
+          {/* Amount */}
+          <Grid item xs={3}>
+            <Box
+              sx={{
+                p: 1,
+                backgroundColor: "background.default",
+                borderRadius: 1,
+                textAlign: "right",
+              }}
+            >
+              <Typography variant="body2">
+                {row.amount?.toFixed(2) || "0.00"}
+              </Typography>
+            </Box>
+          </Grid>
+        </Grid>
+      ))}
+    </Box>
+  );
+}
+
+export default function AddSaleDialog({ open, onClose, invNo, editingSale, customers, inventory }) {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showPrintPreview, setShowPrintPreview] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
@@ -32,7 +239,6 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale }) {
   const [date, setDate] = useState(
     new Date().toLocaleString('en-GB', { timeZone: 'Asia/Karachi' }).substring(0, 19)
   );
-  const [customers, setCustomers] = useState([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [area, setArea] = useState("");
   const [specialLess, setSpecialLess] = useState("");
@@ -44,6 +250,12 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale }) {
   const [totalAmount, setTotalAmount] = useState(0);
   const [remarks, setRemarks] = useState("Carton: ");
 
+  // Focus management refs
+  const dateInputRef = React.useRef(null);
+  const customerSelectRef = React.useRef(null);
+  const remarksInputRef = React.useRef(null);
+  const printButtonRef = React.useRef(null);
+
   useEffect(() => {
     if (open) {
       if (editingSale) {
@@ -52,15 +264,18 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale }) {
       else{
         loadData();
       }
+      // Focus on date field when dialog opens
+      setTimeout(() => {
+        if (dateInputRef.current) {
+          dateInputRef.current.focus();
+        }
+      }, 100);
     }
-  }, [open, editingSale]);
+  }, [open, editingSale, inventory]);
 
   async function loadData() {
     try {
-      const response = await getCustomers();
-      setCustomers(response.customers || []);
-
-      const inventory = await getInventory();
+      // Use passed customers and inventory props instead of API calls
       const initialRows = (inventory || []).map((inv) => ({
         itemId: inv._id,
         itemDescription: `${inv.length} ${inv.gauge}`,
@@ -104,8 +319,7 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale }) {
   async function loadSaleData(sale) {
     try {
       console.log(sale);
-      const response = await getCustomers();
-      setCustomers(response.customers || []);
+      // Use passed customers prop instead of API call
       setInvoiceNo(sale.sale_id);
       
       // Parse the date from DD/MM/YYYY HH:MM format to ISO format
@@ -213,8 +427,30 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale }) {
     setPrevBalance(0);
   };
 
+  const handleCustomerKeyDown = (e) => {
+    handleKeyDown(e, 'customer');
+  };
+
   const handleDateChange = (e) => {
     setDate(e.target.value);
+  };
+
+  const handleDateKeyDown = (e) => {
+    handleKeyDown(e, 'date');
+  };
+
+  const handleRemarksKeyDown = (e) => {
+    handleKeyDown(e, 'remarks');
+  };
+
+  const handleTabFromTable = () => {
+    console.log('handleTabFromTable called, focusing on remarks');
+    if (remarksInputRef.current) {
+      remarksInputRef.current.focus();
+      // Move cursor to the end of the text
+      const textLength = remarks.length;
+      remarksInputRef.current.setSelectionRange(textLength, textLength);
+    }
   };
 
   // Convert datetime-local format to proper Date object for backend
@@ -369,19 +605,47 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale }) {
     setSnackbar({ ...snackbar, open: false });
   };
 
+  // Handle keyboard navigation
+  const handleKeyDown = (event, currentField) => {
+    if (event.key === 'Enter' || event.key === 'Tab') {
+      event.preventDefault();
+      
+      switch (currentField) {
+        case 'date':
+          if (customerSelectRef.current) {
+            customerSelectRef.current.focus();
+          }
+          break;
+        case 'customer':
+          // Focus on first item in the table
+          const firstItemInput = document.querySelector('[data-item-row="0"] [data-field="qty"]');
+          if (firstItemInput) {
+            firstItemInput.focus();
+          }
+          break;
+        case 'remarks':
+          if (printButtonRef.current) {
+            printButtonRef.current.focus();
+          }
+          break;
+      }
+    }
+  };
+
   return (
     <>
       <Dialog open={open} onClose={handleCloseClick} fullWidth maxWidth="lg">
-        <DialogTitle>{editingSale ? 'Edit Sale' : 'Add New Sale'}</DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={6} md={2}>
             <Box>
                 <InputLabel shrink>Inv. No.</InputLabel>
                 <TextField
                   value={invoiceNo}
                   onChange={(e) => setInvoiceNo(e.target.value)}
                   readOnly
+                  size="small"
+                  sx={{ '& .MuiInputBase-root': { height: '40px' } }}
                 />
               </Box>
 
@@ -393,20 +657,26 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale }) {
                   type="datetime-local" // Allow date and time selection
                   value={date}
                   onChange={handleDateChange}
+                  onKeyDown={handleDateKeyDown}
                   fullWidth
                   size="small"
+                  inputRef={dateInputRef}
+                  sx={{ '& .MuiInputBase-root': { height: '40px' } }}
                 />
               </Box>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={6} md={4}>
               <Box>
                 <InputLabel shrink>Customer</InputLabel>
                 <Select
                   value={selectedCustomerId}
                   onChange={(e) => handleCustomerChange(e.target.value)}
+                  onKeyDown={handleCustomerKeyDown}
                   displayEmpty
                   fullWidth
                   size="small"
+                  inputRef={customerSelectRef}
+                  sx={{ '& .MuiInputBase-root': { height: '40px' } }}
                 >
                   <MenuItem value="">
                     <em>Select</em>
@@ -424,9 +694,10 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale }) {
                 <InputLabel shrink>Area</InputLabel>
                 <TextField
                   value={area}
-                  onChange={(e) => setArea(e.target.value)}
                   readOnly
                   size="small"
+                  fullWidth
+                  sx={{ '& .MuiInputBase-root': { height: '40px' } }}
                 />
               </Box>
 
@@ -436,7 +707,7 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale }) {
           <Grid container spacing={2}>
             {/* Left Column for Items Table */}
             <Grid item xs={12} md={8}>
-              <ItemsTable items={items} onChangeItem={handleItemChange} />
+              <ItemsTable items={items} onChangeItem={handleItemChange} onTabFromTable={handleTabFromTable} />
             </Grid>
 
             {/* Right Column for Other Fields */}
@@ -466,9 +737,11 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale }) {
                   <TextField
                     value={remarks}
                     onChange={(e) => setRemarks(e.target.value)}
+                    onKeyDown={handleRemarksKeyDown}
                     multiline
                     rows={2}
                     fullWidth
+                    inputRef={remarksInputRef}
                   />
                 </Grid>
 
@@ -477,7 +750,7 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale }) {
         </DialogContent>
 
         <DialogActions>
-          <Button onClick={handlePrintClick} variant="contained" color="primary">
+          <Button onClick={handlePrintClick} variant="contained" color="primary" ref={printButtonRef}>
             Print
           </Button>
           <Button onClick={handleSaveClick} variant="contained" color="primary">
