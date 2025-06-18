@@ -123,7 +123,6 @@ export default function SalePrintPreview({ open, onClose, saleData, onPrint }) {
               height: 0.2in;
               border: 1px solid black;
               font-size: 12pt;
-              font-weight: bold;
               text-align: right;
               padding: 0.03in;
               font-family: Arial;
