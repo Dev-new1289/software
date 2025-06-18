@@ -226,9 +226,10 @@ router.get('/sale-items/:saleId', async (req, res) => {
             .populate({
                 path: 'item_id',
                 model: Inventories,
-                select: 'length gauge net_rate',
-            });
-
+                select: 'length gauge net_rate sequence',
+            })
+            .sort({ 'item_id.sequence': 1 });
+        
         if (!saleItems.length) {
             return res.status(404).json({ success: false, message: 'No sale items found for this sale ID.' });
         }
