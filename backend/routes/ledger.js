@@ -18,6 +18,13 @@ router.get('/customer/:customerId', async (req, res) => {
       });
     }
 
+    // Create proper date range to include full days
+    const startDateTime = new Date(startDate);
+    startDateTime.setHours(0, 0, 0, 0); // Start of day
+    
+    const endDateTime = new Date(endDate);
+    endDateTime.setHours(23, 59, 59, 999); // End of day
+
     // Get customer details
     const customer = await Customer.findById(customerId)
       .populate({
@@ -42,7 +49,7 @@ router.get('/customer/:customerId', async (req, res) => {
     // Get previous sales
     const previousSales = await Sales.find({
       cust_id: customerId,
-      date: { $lt: new Date(startDate) }
+      date: { $lt: startDateTime }
     });
 
     // Calculate total previous sales
@@ -58,7 +65,7 @@ router.get('/customer/:customerId', async (req, res) => {
     // Get previous cash received
     const previousCash = await CashData.find({
       cust_id: customerId,
-      date: { $lt: new Date(startDate) }
+      date: { $lt: startDateTime }
     });
 
     // Calculate total previous cash received
@@ -74,8 +81,8 @@ router.get('/customer/:customerId', async (req, res) => {
     const salesData = await Sales.find({
       cust_id: customerId,
       date: {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate)
+        $gte: startDateTime,
+        $lte: endDateTime
       }
     }).sort({ date: 1 });
 
@@ -83,8 +90,8 @@ router.get('/customer/:customerId', async (req, res) => {
     const cashData = await CashData.find({
       cust_id: customerId,
       date: {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate)
+        $gte: startDateTime,
+        $lte: endDateTime
       }
     }).sort({ date: 1 });
 

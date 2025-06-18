@@ -8,6 +8,7 @@ import BulkCashEntryDialog from './components/BulkCashEntryDialog';
 import SearchBar from './components/SearchBar';
 import SortControl from './components/SortControl';
 import CardView from './components/CardView';
+import { formatDateTime } from '../utils/dateUtils';
 
 const CashManagement = () => {
   const [cashList, setCashList] = useState([]);
@@ -51,7 +52,7 @@ const CashManagement = () => {
       if (cashResponse && cashResponse.data && cashResponse.data.cashData) {
         const formattedCashData = cashResponse.data.cashData.map(cash => ({
           ...cash,
-          date: new Date(cash.date).toLocaleString(),
+          date: formatDateTime(cash.date),
           customerNameWithAreaAndGroup: formatCustomerName(cash.cust_id)
         }));
         setCashList(formattedCashData);
@@ -114,7 +115,7 @@ const CashManagement = () => {
       if (response && response.cashData) {
         const formattedCashData = response.cashData.map(cash => ({
           ...cash,
-          date: new Date(cash.date).toLocaleString(),
+          date: formatDateTime(cash.date),
         }));
         setFilteredCashList(formattedCashData);
       } else {

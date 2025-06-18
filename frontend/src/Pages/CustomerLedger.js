@@ -19,6 +19,7 @@ import {
   Snackbar
 } from '@mui/material';
 import { getCustomers, getCustomerLedger } from '../api';
+import { formatDate, getCurrentDateForInput } from '../utils/dateUtils';
 
 const CustomerLedger = () => {
   const [customers, setCustomers] = useState([]);
@@ -29,6 +30,13 @@ const CustomerLedger = () => {
   const [customerDetails, setCustomerDetails] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Set current date to both start and end date fields on component mount
+  useEffect(() => {
+    const currentDate = getCurrentDateForInput();
+    setStartDate(currentDate);
+    setEndDate(currentDate);
+  }, []);
 
   useEffect(() => {
     const loadCustomers = async () => {
@@ -82,15 +90,6 @@ const CustomerLedger = () => {
       currency: 'PKR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    });
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: '2-digit'
     });
   };
 

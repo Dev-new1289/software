@@ -2,7 +2,53 @@ const express = require('express');
 const router = express.Router();
 const CashData = require('../models/CashData');
 const Customer = require('../models/Customer');
+const Sales = require('../models/Sales');
 
+// Function to update customer balance
+async function updateCustomerBalance(customerId) {
+  try {
+    // Get the opening balance
+    const customer = await Customer.findOne({ _id: customerId });
+    if (!customer) {
+      throw new Error('Customer not found');
+    }
+
+    let balance = customer.balance_bf; // Opening balance
+
+    // Get all sales for this customer
+    const sales = await Sales.find({ cust_id: customerId });
+    
+    // Calculate total sales amount
+    let totalSales = 0;
+    sales.forEach(sale => {
+      const saleAmount = Math.round(sale.amount - (sale.amount * ((sale.special_less || 0) / 100)));
+      totalSales += saleAmount;
+    });
+
+    // Add total sales to balance
+    balance += totalSales;
+
+    // Get all cash receipts for this customer
+    const received = await CashData.find({ cust_id: customerId });
+    
+    // Calculate total received amount
+    let totalReceived = 0;
+    received.forEach(receipt => {
+      totalReceived += receipt.amount;
+    });
+
+    // Subtract total received from balance
+    balance -= totalReceived;
+
+    // Update customer balance in database
+    await Customer.findByIdAndUpdate(customerId, { balance: balance });
+
+    return balance;
+  } catch (error) {
+    console.error("Error updating customer balance:", error);
+    throw new Error("An error occurred while updating customer balance.");
+  }
+}
 
 // Get all cash data with pagination
 router.get('/', async (req, res) => {
@@ -207,6 +253,10 @@ router.post('/', async (req, res) => {
     });
 
     const savedCashData = await newCashData.save();
+    
+    // Update customer balance after adding cash data
+    await updateCustomerBalance(cust_id);
+    
     const populatedCashData = await CashData.findById(savedCashData._id)
       .populate({
         path: 'cust_id',
@@ -279,6 +329,9 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Cash data not found' });
     }
 
+    // Update customer balance after updating cash data
+    await updateCustomerBalance(cust_id);
+
     res.json({ cashData: updatedCashData });
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -288,10 +341,20 @@ router.put('/:id', async (req, res) => {
 // Delete cash data
 router.delete('/:id', async (req, res) => {
   try {
-    const cashData = await CashData.findByIdAndDelete(req.params.id);
+    // Get the cash data before deleting to know which customer to update
+    const cashData = await CashData.findById(req.params.id);
     if (!cashData) {
       return res.status(404).json({ message: 'Cash data not found' });
     }
+
+    const customerId = cashData.cust_id;
+    
+    // Delete the cash data
+    await CashData.findByIdAndDelete(req.params.id);
+    
+    // Update customer balance after deleting cash data
+    await updateCustomerBalance(customerId);
+    
     res.json({ message: 'Cash data deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -337,6 +400,14 @@ router.post('/bulk', async (req, res) => {
 
     // Create cash entries
     const createdEntries = await CashData.insertMany(formattedEntries);
+
+    // Get unique customer IDs to update their balances
+    const uniqueCustomerIds = [...new Set(formattedEntries.map(entry => entry.cust_id))];
+    
+    // Update customer balances for all affected customers
+    for (const customerId of uniqueCustomerIds) {
+      await updateCustomerBalance(customerId);
+    }
 
     // Populate customer data for response
     const populatedEntries = await CashData.find({

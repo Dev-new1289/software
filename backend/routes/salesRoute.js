@@ -6,6 +6,53 @@ const SalesItems = require('../models/SalesItems'); // Path to SalesItems model
 const Inventories = require('../models/Inventories'); // Path to Inventories model
 const Area = require('../models/Area'); // Path to Inventories model
 const AreaGroup = require('../models/AreaGroup'); // Path to Inventories model
+const CashData = require('../models/CashData'); // Path to CashData model
+
+// Function to update customer balance
+async function updateCustomerBalance(customerId) {
+  try {
+    // Get the opening balance
+    const customer = await Customer.findOne({ _id: customerId });
+    if (!customer) {
+      throw new Error('Customer not found');
+    }
+
+    let balance = customer.balance_bf; // Opening balance
+
+    // Get all sales for this customer
+    const sales = await Sales.find({ cust_id: customerId });
+    
+    // Calculate total sales amount
+    let totalSales = 0;
+    sales.forEach(sale => {
+      const saleAmount = Math.round(sale.amount - (sale.amount * ((sale.special_less || 0) / 100)));
+      totalSales += saleAmount;
+    });
+
+    // Add total sales to balance
+    balance += totalSales;
+
+    // Get all cash receipts for this customer
+    const received = await CashData.find({ cust_id: customerId });
+    
+    // Calculate total received amount
+    let totalReceived = 0;
+    received.forEach(receipt => {
+      totalReceived += receipt.amount;
+    });
+
+    // Subtract total received from balance
+    balance -= totalReceived;
+
+    // Update customer balance in database
+    await Customer.findByIdAndUpdate(customerId, { balance: balance });
+
+    return balance;
+  } catch (error) {
+    console.error("Error updating customer balance:", error);
+    throw new Error("An error occurred while updating customer balance.");
+  }
+}
 
 router.get('/all', async (req, res) => {
     try {
@@ -132,6 +179,10 @@ router.post('/save-sale', async (req, res) => {
 
             await salesItem.save();
         }
+        
+        // Update customer balance after adding sale
+        await updateCustomerBalance(cust_id);
+        
         res.status(201).json({ message: "Sales data saved successfully." });
     } catch (error) {
         res.status(500).json({ message: "An error occurred while saving sales data: " + error.message });
@@ -148,9 +199,9 @@ router.put('/save-sale', async (req, res) => {
     }
 
     try {
-        // Find and update the existing sale
+        // Find and update the existing sale using MongoDB _id
         const updatedSale = await Sales.findByIdAndUpdate(
-            sale_id,
+            sale_id, // This should be the MongoDB _id, not the sale_id number
             {
                 date,
                 cust_id,
@@ -165,8 +216,8 @@ router.put('/save-sale', async (req, res) => {
             return res.status(404).json({ message: "Sale not found" });
         }
 
-        // Get existing sales items
-        const existingItems = await SalesItems.find({ sales_id: sale_id });
+        // Get existing sales items using the MongoDB _id
+        const existingItems = await SalesItems.find({ sales_id: updatedSale._id });
         const existingItemsMap = new Map(existingItems.map(item => [item.item_id.toString(), item]));
 
         // Process each item in the request
@@ -207,13 +258,17 @@ router.put('/save-sale', async (req, res) => {
         if (existingItemsMap.size > 0) {
             const itemIdsToDelete = Array.from(existingItemsMap.keys());
             await SalesItems.deleteMany({ 
-                sales_id: sale_id, 
+                sales_id: updatedSale._id, 
                 item_id: { $in: itemIdsToDelete }
             });
         }
 
+        // Update customer balance after updating sale
+        await updateCustomerBalance(cust_id);
+
         res.status(200).json({ message: "Sales data updated successfully." });
     } catch (error) {
+        console.error('Error updating sale:', error);
         res.status(500).json({ message: "An error occurred while updating sales data: " + error.message });
     }
 });

@@ -12,14 +12,16 @@ import {
   MenuItem,
   Grid,
   Typography,
+  Snackbar,
+  Alert,
+  DialogContentText,
 } from "@mui/material";
 
 import LabelledInput from "./LabelledInput";
 import { getCustomers, getInventory, getCustomerDetails, saveSale, editSale, getSaleItems } from "../../api"; // Import the new API function
 import ItemsTable from "./ItemsTable"; // Import the ItemsTable component
 import SalePrintPreview from "./SalePrintPreview";
-import Snackbar from '@mui/material/Snackbar';
-import MuiAlert from '@mui/material/Alert';
+import { parseDDMMYYYYToISO } from '../../utils/dateUtils';
 
 export default function AddSaleDialog({ open, onClose, invNo, editingSale }) {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -101,31 +103,40 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale }) {
 
   async function loadSaleData(sale) {
     try {
+      console.log(sale);
       const response = await getCustomers();
       setCustomers(response.customers || []);
       setInvoiceNo(sale.sale_id);
-      const localDate = new Date(sale.date);
-      const offset = localDate.getTimezoneOffset();
-      const localISOTime = new Date(localDate.getTime() - offset * 60000).toISOString().slice(0, 16);
-      setDate(localISOTime);
+      
+      // Parse the date from DD/MM/YYYY HH:MM format to ISO format
+      const isoDate = parseDDMMYYYYToISO(sale.date);
+      setDate(isoDate);
+      
       setSelectedCustomerId(sale.cust_id._id);
       setSpecialLess(sale.special_less?.toString() || "");
       setRemarks(sale.remarks || "Carton: ");
 
       // Load items
       const saleItems = await getSaleItems(sale._id);
-      const initialRows = (saleItems.data.saleItems || []).map((inv) => ({
-        saleitem_id: inv._id,
-        cost: inv.cost,
-        itemId: inv.item_id._id,
-        itemDescription: `${inv.item_id.length} ${inv.item_id.gauge}`,
-        qty: inv.quantity,
-        rate: inv.rate,
-        amount: inv.quantity * inv.rate,
-      }));
+      const initialRows = (saleItems.data.saleItems || [])
+        .sort((a, b) => {
+          // Sort by sequence as strings
+          return a.item_id.sequence.localeCompare(b.item_id.sequence, undefined, { numeric: true });
+        })
+        .map((inv) => ({
+          saleitem_id: inv._id,
+          cost: inv.cost,
+          itemId: inv.item_id._id,
+          itemDescription: `${inv.item_id.length} ${inv.item_id.gauge}`,
+          qty: inv.quantity,
+          rate: inv.rate,
+          amount: inv.quantity * inv.rate,
+        }));
       setItems(initialRows);
     
-      await fetchCustomerDetails(sale.cust_id._id, sale.date, sale._id);
+      // Convert the date to proper format for backend API call
+      const convertedDate = convertDateForBackend(isoDate);
+      await fetchCustomerDetails(sale.cust_id._id, convertedDate, sale._id);
 
     } catch (err) {
       setSnackbar({ open: true, message: err.message || 'Error', severity: 'error' });
@@ -169,10 +180,10 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale }) {
     let receiv = net;
     const special = parseFloat(specialLess) || 0;
     if (special > 0 && special <= 100) {
-      less = (net * special) / 100.0;
-      receiv = net - less;
+      less = Math.round((net * special) / 100.0);
+      receiv = Math.round(net - less);
     }
-    const total = (prevBalance || 0) + receiv;
+    const total = Math.round((prevBalance || 0) + receiv);
 
     setNetAmount(net);
     setLessAmount(less);
@@ -206,44 +217,57 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale }) {
     setDate(e.target.value);
   };
 
+  // Convert datetime-local format to proper Date object for backend
+  const convertDateForBackend = (dateString) => {
+    if (!dateString) return new Date();
+    return new Date(dateString);
+  };
+
   const handlePrintClick = async () => {
+    // Close dialog immediately
+    onClose();
+    
+    // Prepare sale data
+    const saleData = editingSale ? {
+      sale_id: editingSale._id,
+      date: convertDateForBackend(date),
+      cust_id: selectedCustomerId,
+      amount: netAmount,
+      special_less: parseFloat(specialLess) || 0,
+      remarks,
+      items: items.map(item => ({
+        saleitem_id: item.saleitem_id,
+        item_id: item.itemId,
+        quantity: item.qty,
+        rate: item.rate,
+        cost: item.cost,
+      })),
+    } : {
+      sale_id: invoiceNo,
+      date: convertDateForBackend(date),
+      cust_id: selectedCustomerId,
+      amount: netAmount,
+      special_less: parseFloat(specialLess) || 0,
+      remarks,
+      items: items.map(item => ({
+        item_id: item.itemId,
+        quantity: item.qty,
+        rate: item.rate,
+      })),
+    };
+
+    // Handle backend operation asynchronously
     try {
       if (editingSale) {
-        const saleData = {
-          sale_id: editingSale._id,
-          date,
-          cust_id: selectedCustomerId,
-          amount: netAmount,
-          special_less: parseFloat(specialLess) || 0,
-          remarks,
-          items: items.map(item => ({
-            saleitem_id: item.saleitem_id,
-            item_id: item.itemId,
-            quantity: item.qty,
-            rate: item.rate,
-            cost: item.cost,
-          })),
-        };
         await editSale(saleData);
       } else {
-        const saleData = {
-          sale_id: invoiceNo,
-          date,
-          cust_id: selectedCustomerId,
-          amount: netAmount,
-          special_less: parseFloat(specialLess) || 0,
-          remarks,
-          items: items.map(item => ({
-            item_id: item.itemId,
-            quantity: item.qty,
-            rate: item.rate,
-          })),
-        };
         await saveSale(saleData);
       }
+      // Show print preview on success
       setShowPrintPreview(true);
-      onClose();
+      setSnackbar({ open: true, message: 'Sale saved successfully', severity: 'success' });
     } catch (error) {
+      // Show error if backend operation fails
       setSnackbar({ open: true, message: error.message || 'Error saving sale', severity: 'error' });
     }
   };
@@ -273,42 +297,49 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale }) {
   };
 
   const handleSaveClick = async () => {
+    // Close dialog immediately
+    onClose();
+    
+    // Prepare sale data
+    const saleData = editingSale ? {
+      sale_id: editingSale._id,
+      date: convertDateForBackend(date),
+      cust_id: selectedCustomerId,
+      amount: netAmount,
+      special_less: parseFloat(specialLess) || 0,
+      remarks,
+      items: items.map(item => ({
+        saleitem_id: item.saleitem_id,
+        item_id: item.itemId,
+        quantity: item.qty,
+        rate: item.rate,
+        cost: item.cost,
+      })),
+    } : {
+      sale_id: invoiceNo,
+      date: convertDateForBackend(date),
+      cust_id: selectedCustomerId,
+      amount: netAmount,
+      special_less: parseFloat(specialLess) || 0,
+      remarks,
+      items: items.map(item => ({
+        item_id: item.itemId,
+        quantity: item.qty,
+        rate: item.rate,
+      })),
+    };
+
+    // Handle backend operation asynchronously
     try {
       if (editingSale) {
-        const saleData = {
-          sale_id: editingSale._id,
-          date,
-          cust_id: selectedCustomerId,
-          amount: netAmount,
-          special_less: parseFloat(specialLess) || 0,
-          remarks,
-          items: items.map(item => ({
-            saleitem_id: item.saleitem_id,
-            item_id: item.itemId,
-            quantity: item.qty,
-            rate: item.rate,
-            cost: item.cost,
-          })),
-        };
         await editSale(saleData);
       } else {
-        const saleData = {
-          sale_id: invoiceNo,
-          date,
-          cust_id: selectedCustomerId,
-          amount: netAmount,
-          special_less: parseFloat(specialLess) || 0,
-          remarks,
-          items: items.map(item => ({
-            item_id: item.itemId,
-            quantity: item.qty,
-            rate: item.rate,
-          })),
-        };
         await saveSale(saleData);
       }
-      onClose();
+      // Success - could show a success message if needed
+      setSnackbar({ open: true, message: 'Sale saved successfully', severity: 'success' });
     } catch (error) {
+      // Show error if backend operation fails
       setSnackbar({ open: true, message: error.message || 'Error saving sale', severity: 'error' });
     }
   };
@@ -487,9 +518,9 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale }) {
 
       {/* Error Snackbar */}
       <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={handleSnackbarClose}>
-        <MuiAlert elevation={6} variant="filled" onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
+        <Alert elevation={6} variant="filled" onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
           {snackbar.message}
-        </MuiAlert>
+        </Alert>
       </Snackbar>
     </>
   );

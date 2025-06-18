@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Typography } from '@mui/material';
 import logo from '../../assets/logo.png';
+import { formatDate } from '../../utils/dateUtils';
 
 export default function SalePrintPreview({ open, onClose, saleData, onPrint }) {
   const { invoiceNo, date, customer, area, items, netAmount, specialLess, lessAmount, receivable, prevBalance, totalAmount, remarks } = saleData;
@@ -60,7 +61,7 @@ export default function SalePrintPreview({ open, onClose, saleData, onPrint }) {
             .header {
               position: absolute;
               left: 2in;
-              top: 0.25in;
+              top: 0.35in;
             }
             .header h1 {
               font-size: 28pt;
@@ -136,7 +137,7 @@ export default function SalePrintPreview({ open, onClose, saleData, onPrint }) {
             }
             .footer {
               position: absolute;
-              bottom: 2in;
+              bottom: 1.5in;
               left: 0.25in;
               width: 7.5in;
             }
@@ -207,7 +208,7 @@ export default function SalePrintPreview({ open, onClose, saleData, onPrint }) {
               padding-left: 0.3in;
               font-size: 80pt;
               font-weight: bold;
-              color: lightgray;
+              color: #F5F5F5;
               font-family: Arial;
             }
             .full-width-box {
@@ -232,7 +233,7 @@ export default function SalePrintPreview({ open, onClose, saleData, onPrint }) {
                 <h1>Anchor Brand Drywall Screws</h1>
                 <div class="invoice-info">
                   <span class="inv-no">Inv. No: ${invoiceNo}</span>
-                  <span class="date">Date: ${new Date(date).toLocaleDateString()}</span>
+                  <span class="date">Date: ${formatDate(date)}</span>
                 </div>
                 <p>Bill To: ${customer}</p>
                 <p>${area}</p>
@@ -404,7 +405,7 @@ export default function SalePrintPreview({ open, onClose, saleData, onPrint }) {
                     fontFamily: 'Arial',
                     mt: 0.5
                   }}>
-                    Date: {new Date(date).toLocaleDateString()}
+                    Date: {formatDate(date)}
                   </Typography>
                   <Typography sx={{ 
                     fontSize: '14pt',

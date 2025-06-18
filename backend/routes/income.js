@@ -16,11 +16,18 @@ router.get('/grand-total', async (req, res) => {
       });
     }
 
+    // Create proper date range to include full days
+    const startDateTime = new Date(startDate);
+    startDateTime.setHours(0, 0, 0, 0); // Start of day
+    
+    const endDateTime = new Date(endDate);
+    endDateTime.setHours(23, 59, 59, 999); // End of day
+
     // Get all sales items for the date range
     const sales = await Sales.find({
       date: {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate)
+        $gte: startDateTime,
+        $lte: endDateTime
       }
     }).select('_id special_less');
 
@@ -71,11 +78,18 @@ router.get('/report', async (req, res) => {
       });
     }
 
+    // Create proper date range to include full days
+    const startDateTime = new Date(startDate);
+    startDateTime.setHours(0, 0, 0, 0); // Start of day
+    
+    const endDateTime = new Date(endDate);
+    endDateTime.setHours(23, 59, 59, 999); // End of day
+
     // Get total count of sales for pagination
     const totalSales = await Sales.countDocuments({
       date: {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate)
+        $gte: startDateTime,
+        $lte: endDateTime
       }
     });
 
@@ -85,8 +99,8 @@ router.get('/report', async (req, res) => {
     // Get sales data with populated customer, area, and group information
     const sales = await Sales.find({
       date: {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate)
+        $gte: startDateTime,
+        $lte: endDateTime
       }
     })
     .populate({

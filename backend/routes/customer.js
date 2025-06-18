@@ -73,16 +73,14 @@ router.get('/balance', async (req, res) => {
       .sort({ customer_name: 1 });
 
 
-    // Calculate balances for all customers
     const transformedCustomers = await Promise.all(customers.map(async customer => {
-      const balance = await getCustomerBalance(customer._id);
       return {
         _id: customer._id,
         area_id: customer.area_id,
         customer_name: customer.customer_name,
         area_name: customer.area_id ? `${customer.area_id.area_name} (${customer.area_id.group_id.area_group})` : '',
         balance_bf: customer.balance_bf,
-        balance: balance,
+        balance: customer.balance,
         less: customer.less,
         phone: customer.phone
       };
@@ -208,7 +206,7 @@ router.get('/:customerId/details', async (req, res) => {
       // Calculate total sales amount
       let totalSales = 0;
       sales.forEach(sale => {
-        const saleAmount = Math.round(sale.amount - (sale.amount * (sale.special_less / 100)));
+        const saleAmount = Math.round(sale.amount - (sale.amount * ((sale.special_less || 0) / 100)));
         totalSales += saleAmount;
       });
   
@@ -423,7 +421,6 @@ router.get('/group/:groupId/balance', async (req, res) => {
 
     // Calculate balances for all customers
     const transformedCustomers = await Promise.all(customers.map(async customer => {
-      const balance = await getCustomerBalance(customer._id);
       return {
         _id: customer._id,
         customer_name: customer.customer_name,
@@ -431,7 +428,7 @@ router.get('/group/:groupId/balance', async (req, res) => {
         area_name: customer.area_id ? customer.area_id.area_name : '',
         group_name: customer.area_id?.group_id?.area_group || '',
         balance_bf: customer.balance_bf,
-        balance: balance,
+        balance: customer.balance,
         less: customer.less,
         phone: customer.phone
       };
@@ -441,6 +438,86 @@ router.get('/group/:groupId/balance', async (req, res) => {
   } catch (err) {
     console.error('Error fetching customers by group:', err);
     res.status(500).json({ message: err.message });
+  }
+});
+
+// Update all customer balances
+router.post('/update-all-balances', async (req, res) => {
+  try {
+    console.log('Starting bulk customer balance update...');
+    
+    // Get all customers
+    const customers = await Customer.find();
+    console.log(`Found ${customers.length} customers to update`);
+    
+    let updatedCount = 0;
+    let errorCount = 0;
+    const errors = [];
+    
+    // Update each customer's balance
+    for (const customer of customers) {
+      try {
+        let balance = customer.balance_bf; // Opening balance
+
+        // Get all sales for this customer
+        const sales = await Sales.find({ cust_id: customer._id });
+        
+        // Calculate total sales amount
+        let totalSales = 0;
+        sales.forEach(sale => {
+          const saleAmount = Math.round(sale.amount - (sale.amount * ((sale.special_less || 0) / 100)));
+          totalSales += saleAmount;
+        });
+
+        // Add total sales to balance
+        balance += totalSales;
+
+        // Get all cash receipts for this customer
+        const received = await CashData.find({ cust_id: customer._id });
+        
+        // Calculate total received amount
+        let totalReceived = 0;
+        received.forEach(receipt => {
+          totalReceived += receipt.amount;
+        });
+
+        // Subtract total received from balance
+        balance -= totalReceived;
+
+        // Update customer balance in database
+        await Customer.findByIdAndUpdate(customer._id, { balance: balance });
+        
+        updatedCount++;
+        console.log(`Updated balance for customer: ${customer.customer_name} - New balance: ${balance}`);
+        
+      } catch (error) {
+        errorCount++;
+        const errorMsg = `Error updating customer ${customer.customer_name}: ${error.message}`;
+        errors.push(errorMsg);
+        console.error(errorMsg);
+      }
+    }
+    
+    console.log(`Bulk update completed. Updated: ${updatedCount}, Errors: ${errorCount}`);
+    
+    res.json({
+      success: true,
+      message: `Bulk customer balance update completed`,
+      summary: {
+        totalCustomers: customers.length,
+        updatedCount: updatedCount,
+        errorCount: errorCount
+      },
+      errors: errors.length > 0 ? errors : undefined
+    });
+    
+  } catch (error) {
+    console.error('Error in bulk customer balance update:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating all customer balances',
+      error: error.message
+    });
   }
 });
 

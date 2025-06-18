@@ -20,10 +20,14 @@ import {
   InputLabel,
   Card,
   CardContent,
-  Divider
+  Divider,
+  Alert,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
-import { getIncomeReport, getIncomeGrandTotal } from '../api';
+import { getIncomeReport, getIncomeGrandTotal, getGrandTotalProfit } from '../api';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
+import { formatDate, getCurrentDateForInput } from '../utils/dateUtils';
 
 const IncomeReport = () => {
   const [startDate, setStartDate] = useState('');
@@ -34,6 +38,13 @@ const IncomeReport = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [grandTotal, setGrandTotal] = useState(null);
+
+  // Set current date to both start and end date fields on component mount
+  useEffect(() => {
+    const currentDate = getCurrentDateForInput();
+    setStartDate(currentDate);
+    setEndDate(currentDate);
+  }, []);
 
   const handleGenerateReport = async (pageNumber = 1) => {
     if (!startDate || !endDate) {
@@ -91,15 +102,6 @@ const IncomeReport = () => {
       currency: 'PKR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    });
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: '2-digit'
     });
   };
 
@@ -213,8 +215,7 @@ const IncomeReport = () => {
               >
                 <MenuItem value={5}>5</MenuItem>
                 <MenuItem value={10}>10</MenuItem>
-                <MenuItem value={20}>20</MenuItem>
-                <MenuItem value={50}>50</MenuItem>
+
               </Select>
             </FormControl>
           </Grid>
@@ -239,7 +240,6 @@ const IncomeReport = () => {
             display: { xs: 'none', md: 'block' }, 
             position: 'relative',
             width: '100%',
-            height: 'calc(100vh - 200px)',
             overflow: 'auto'
           }}>
             <TableContainer 
@@ -267,7 +267,7 @@ const IncomeReport = () => {
                 }
               }}
             >
-              <Table stickyHeader>
+              <Table>
                 <TableHead
                   sx={{
                     backgroundColor: '#333',
@@ -276,9 +276,6 @@ const IncomeReport = () => {
                       fontWeight: 'bold',
                       textAlign: 'left',
                       borderBottom: 'none',
-                      position: 'sticky',
-                      top: 0,
-                      zIndex: 1100,
                       backgroundColor: '#333',
                       '&::after': {
                         content: '""',
@@ -346,18 +343,6 @@ const IncomeReport = () => {
                       </TableRow>
                     </React.Fragment>
                   ))}
-                  <TableRow>
-                    <TableCell colSpan={8} align="right">
-                      <Typography variant="h6" fontWeight="bold">
-                        Page Total:
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="right">
-                      <Typography variant="h6" fontWeight="bold">
-                        {formatCurrency(reportData.pageTotalProfit)}
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
                   {reportData.pagination.isLastPage && grandTotal !== null && (
                     <TableRow>
                       <TableCell colSpan={8} align="right">
@@ -380,31 +365,20 @@ const IncomeReport = () => {
           {/* Mobile Card View */}
           <Box sx={{ display: { xs: 'block', md: 'none' } }}>
             {reportData.sales.map(renderMobileCard)}
-            <Card sx={{ mt: 2, mb: 2 }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="h6" fontWeight="bold">
-                    Page Total:
-                  </Typography>
-                  <Typography variant="h6" fontWeight="bold">
-                    {formatCurrency(reportData.pageTotalProfit)}
-                  </Typography>
-                </Box>
-                {reportData.pagination.isLastPage && grandTotal !== null && (
-                  <>
-                    <Divider sx={{ my: 1 }} />
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant="h6" fontWeight="bold">
-                        Grand Total:
-                      </Typography>
-                      <Typography variant="h6" fontWeight="bold">
-                        {formatCurrency(grandTotal)}
-                      </Typography>
-                    </Box>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+            {reportData.pagination.isLastPage && grandTotal !== null && (
+              <Card sx={{ mt: 2, mb: 2 }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h6" fontWeight="bold">
+                      Grand Total:
+                    </Typography>
+                    <Typography variant="h6" fontWeight="bold">
+                      {formatCurrency(grandTotal)}
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            )}
           </Box>
 
           <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>

@@ -7,6 +7,7 @@ import SearchBar from './components/SearchBar';
 import SortControl from './components/SortControl';
 import CardView from './components/CardView';
 import AddSaleDialog from './components/AddSaleDialog';
+import { formatDateTime } from '../utils/dateUtils';
 
 const SalesManagement = () => {
   const [salesList, setSalesList] = useState([]);
@@ -29,7 +30,7 @@ const SalesManagement = () => {
       if (salesResponse && salesResponse.data && salesResponse.data.salesData) {
         const formattedSalesData = salesResponse.data.salesData.map(sale => ({
           ...sale,
-          date: new Date(sale.date).toLocaleString(),
+          date: formatDateTime(sale.date),
         }));
 
         setSalesList(formattedSalesData);
@@ -78,7 +79,7 @@ const SalesManagement = () => {
       if (response && response.salesData) {
         const formattedSalesData = response.salesData.map(sale => ({
           ...sale,
-          date: new Date(sale.date).toLocaleString(),
+          date: formatDateTime(sale.date),
         }));
         setFilteredSalesList(formattedSalesData);
       } else {
