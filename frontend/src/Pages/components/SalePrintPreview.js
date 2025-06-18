@@ -54,14 +54,14 @@ export default function SalePrintPreview({ open, onClose, saleData, onPrint }) {
             .logo {
               position: absolute;
               left: 0.25in;
-              top: 0.25in;
+              top: 0.5in;
               width: 1.5in;
               height: 1.5in;
             }
             .header {
               position: absolute;
               left: 2in;
-              top: 0.35in;
+              top: 0.6in;
             }
             .header h1 {
               font-size: 28pt;
@@ -208,7 +208,7 @@ export default function SalePrintPreview({ open, onClose, saleData, onPrint }) {
               padding-left: 0.3in;
               font-size: 80pt;
               font-weight: bold;
-              color: #F5F5F5;
+              color: #ffffff;
               font-family: Arial;
             }
             .full-width-box {

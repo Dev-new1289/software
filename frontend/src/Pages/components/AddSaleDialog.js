@@ -224,7 +224,10 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale }) {
   };
 
   const handlePrintClick = async () => {
-    // Close dialog immediately
+    // Show print preview immediately
+    setShowPrintPreview(true);
+    
+    // Close the main dialog
     onClose();
     
     // Prepare sale data
@@ -256,15 +259,14 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale }) {
       })),
     };
 
-    // Handle backend operation asynchronously
+    // Handle backend operation asynchronously in the background
     try {
       if (editingSale) {
         await editSale(saleData);
       } else {
         await saveSale(saleData);
       }
-      // Show print preview on success
-      setShowPrintPreview(true);
+      // Show success message if needed
       setSnackbar({ open: true, message: 'Sale saved successfully', severity: 'success' });
     } catch (error) {
       // Show error if backend operation fails
