@@ -307,7 +307,7 @@ export default function SalePrintPreview({ open, onClose, saleData, onPrint }) {
                       <td>${netAmount.toFixed(2)}</td>
                     </tr>
                     <tr>
-                      <td>Discount % ${specialLess.toFixed(2)}</td>
+                      <td>Discount % ${(Number(specialLess) || 0).toFixed(2)}</td>
                       <td>${lessAmount.toFixed(2)}</td>
                     </tr>
                     <tr>

@@ -213,7 +213,7 @@ router.get('/:customerId/details', async (req, res) => {
       // Calculate total sales amount
       let totalSales = 0;
       sales.forEach(sale => {
-        const saleAmount = Math.round(sale.amount - (sale.amount * ((sale.special_less || 0) / 100)));
+        const saleAmount = Math.round(sale.amount - (sale.amount * (sale.special_less || 0) / 100));
         totalSales += saleAmount;
       });
   
@@ -454,7 +454,9 @@ router.post('/update-all-balances', async (req, res) => {
     console.log('Starting bulk customer balance update...');
     
     // Get all customers
-    const customers = await Customer.find();
+    const customerId = '684fa79a6a09962c26b46864';
+    const customer = await Customer.findById(customerId);
+    const customers = customer ? [customer] : [];
     console.log(`Found ${customers.length} customers to update`);
     
     let updatedCount = 0;
@@ -472,7 +474,7 @@ router.post('/update-all-balances', async (req, res) => {
         // Calculate total sales amount
         let totalSales = 0;
         sales.forEach(sale => {
-          const saleAmount = Math.round(sale.amount - (sale.amount * ((sale.special_less || 0) / 100)));
+          const saleAmount = Math.round(sale.amount - (sale.amount * (sale.special_less || 0) / 100));
           totalSales += saleAmount;
         });
 

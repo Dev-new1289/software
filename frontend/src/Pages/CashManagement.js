@@ -236,6 +236,7 @@ const CashManagement = () => {
   };
 
   const handleSaveCashData = async (cashData) => {
+    handleCloseDialog();
     try {
       // Find the selected customer from the customers list
       const selectedCustomer = customers.find(customer => 
@@ -266,21 +267,12 @@ const CashManagement = () => {
       };
 
       if (editingCashData) {
-        const updatedCashData = await editCashData(editingCashData._id, cashDataToSave);
-        setCashList((prev) => prev.map((cash) => 
-          cash._id === editingCashData._id ? {
-            ...updatedCashData.data.cashData,
-            customerNameWithAreaAndGroup: formatCustomerName(updatedCashData.data.cashData.cust_id)
-          } : cash
-        ));
+        await editCashData(editingCashData._id, cashDataToSave);
       } else {
-        const addedCashData = await addCashData(cashDataToSave);
-        setCashList((prev) => [...prev, {
-          ...addedCashData.data.cashData,
-          customerNameWithAreaAndGroup: formatCustomerName(addedCashData.data.cashData.cust_id)
-        }]);
+        await addCashData(cashDataToSave);
       }
-      handleCloseDialog();
+      // Always refresh after save
+      refreshCashList();
     } catch (error) {
       setError(error.message || 'Failed to save cash data. Please try again.');
     }
@@ -324,9 +316,9 @@ const CashManagement = () => {
   };
 
   const handleBulkSave = async (cashEntries) => {
+    handleCloseBulkDialog();
     try {
       await addBulkCashData(cashEntries);
-      handleCloseBulkDialog();
       refreshCashList();
     } catch (error) {
       setError(error.message || 'Failed to save bulk cash data');

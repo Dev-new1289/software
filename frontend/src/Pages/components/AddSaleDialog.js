@@ -350,7 +350,7 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale, custo
     
       // Convert the date to proper format for backend API call
       const convertedDate = convertDateForBackend(isoDate);
-      await fetchCustomerDetails(sale.cust_id._id, convertedDate, sale._id);
+      await fetchCustomerDetails(sale.cust_id._id, convertedDate, sale._id, true);
 
     } catch (err) {
       setSnackbar({ open: true, message: err.message || 'Error', severity: 'error' });
@@ -372,11 +372,11 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale, custo
     }
   }, [selectedCustomerId, date]);
 
-  async function fetchCustomerDetails(customerId, selectedDate, invoiceId) {
+  async function fetchCustomerDetails(customerId, selectedDate, invoiceId, skipSpecialLessUpdate = false) {
     try {
       const customerDetails = await getCustomerDetails(customerId, selectedDate, invoiceId);
       setArea(customerDetails.area);
-      setSpecialLess(customerDetails.less);
+      if (!skipSpecialLessUpdate) setSpecialLess(customerDetails.less);
       setPrevBalance(customerDetails.balance);
     } catch (err) {
       setSnackbar({ open: true, message: err.message || 'Error', severity: 'error' });
@@ -394,8 +394,10 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale, custo
     let receiv = net;
     const special = parseFloat(specialLess) || 0;
     if (special > 0 && special <= 100) {
+
       less = Math.round((net * special) / 100.0);
-      receiv = Math.round(net - less);
+      receiv = Math.round(net - (net * (special || 0) / 100));
+      
     }
     const total = Math.round((prevBalance || 0) + receiv);
 
@@ -463,9 +465,6 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale, custo
     // Show print preview immediately
     setShowPrintPreview(true);
     
-    // Close the main dialog
-    onClose();
-    
     // Prepare sale data
     const saleData = editingSale ? {
       sale_id: editingSale._id,
@@ -502,6 +501,8 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale, custo
       } else {
         await saveSale(saleData);
       }
+      // Close the main dialog after successful save to refresh the sales list
+      onClose();
       // Show success message if needed
       setSnackbar({ open: true, message: 'Sale saved successfully', severity: 'success' });
     } catch (error) {

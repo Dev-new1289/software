@@ -178,8 +178,9 @@ const SalesManagement = () => {
             color="primary"
             startIcon={<AddIcon />}
             onClick={() => handleOpenDialog()}
+            disabled={invNo === 0}
           >
-            Add New Sale
+            {invNo === 0 ? "Loading..." : "Add New Sale"}
           </Button>
         </Box>
       </Box>
