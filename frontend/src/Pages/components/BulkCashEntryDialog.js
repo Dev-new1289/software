@@ -34,12 +34,22 @@ const BulkCashEntryDialog = ({ open, onClose, onSave, invNo }) => {
   const [selectedGroup, setSelectedGroup] = useState('');
   const [customers, setCustomers] = useState([]);
   const [cashEntries, setCashEntries] = useState([]);
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [detail, setDetail] = useState('');
   const [selectedRowIndex, setSelectedRowIndex] = useState(-1);
   const inputRefs = useRef([]);
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+
+  const getCurrentDateTimeLocal = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+  const [date, setDate] = useState(getCurrentDateTimeLocal());
 
   useEffect(() => {
     const loadGroups = async () => {
@@ -141,9 +151,6 @@ const BulkCashEntryDialog = ({ open, onClose, onSave, invNo }) => {
           borderColor: 'divider'
         }}
       >
-        <Typography variant="h5" component="div" sx={{ fontWeight: 600 }}>
-          Bulk Cash Entry
-        </Typography>
         <Tooltip title="Close">
           <IconButton
             onClick={onClose}
@@ -238,7 +245,7 @@ const BulkCashEntryDialog = ({ open, onClose, onSave, invNo }) => {
                   Date
                 </Typography>
                 <TextField
-                  type="date"
+                  type="datetime-local"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                   variant="outlined"

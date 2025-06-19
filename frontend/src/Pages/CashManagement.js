@@ -65,6 +65,7 @@ const CashManagement = () => {
       if (cashResponse && cashResponse.data && cashResponse.data.cashData) {
         const formattedCashData = cashResponse.data.cashData.map(cash => ({
           ...cash,
+          rawDate: cash.date,
           date: formatDateTime(cash.date),
           customerNameWithAreaAndGroup: formatCustomerName(cash.cust_id)
         }));
@@ -159,37 +160,38 @@ const CashManagement = () => {
       // Safely convert the date to ISO format for datetime-local input
       let dateValue;
       try {
-        const date = new Date(cashData.date);
+        console.log('Editing cashData:', cashData);
+        const dateSource = cashData.rawDate || cashData.date;
+        console.log('Date source for dialog:', dateSource);
+        const date = new Date(dateSource);
         if (isNaN(date.getTime())) {
           // If date is invalid, use current date
           const now = new Date();
           const karachiTime = new Date(
             now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' })
           );
-          
           const year = karachiTime.getFullYear();
           const month = String(karachiTime.getMonth() + 1).padStart(2, '0');
           const day = String(karachiTime.getDate()).padStart(2, '0');
           const hours = String(karachiTime.getHours()).padStart(2, '0');
           const minutes = String(karachiTime.getMinutes()).padStart(2, '0');
-          
           dateValue = `${year}-${month}-${day}T${hours}:${minutes}`;
         } else {
-          dateValue = date.toISOString().slice(0, 16);
+          const pad = (n) => n.toString().padStart(2, '0');
+          dateValue = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
         }
+        console.log('Date value for dialog:', dateValue);
       } catch (error) {
         console.error('Date conversion error:', error);
         const now = new Date();
         const karachiTime = new Date(
           now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' })
         );
-        
         const year = karachiTime.getFullYear();
         const month = String(karachiTime.getMonth() + 1).padStart(2, '0');
         const day = String(karachiTime.getDate()).padStart(2, '0');
         const hours = String(karachiTime.getHours()).padStart(2, '0');
         const minutes = String(karachiTime.getMinutes()).padStart(2, '0');
-        
         dateValue = `${year}-${month}-${day}T${hours}:${minutes}`;
       }
 
@@ -207,13 +209,11 @@ const CashManagement = () => {
       const karachiTime = new Date(
         now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' })
       );
-      
       const year = karachiTime.getFullYear();
       const month = String(karachiTime.getMonth() + 1).padStart(2, '0');
       const day = String(karachiTime.getDate()).padStart(2, '0');
       const hours = String(karachiTime.getHours()).padStart(2, '0');
       const minutes = String(karachiTime.getMinutes()).padStart(2, '0');
-      
       const currentDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
 
       setNewCashData({ 

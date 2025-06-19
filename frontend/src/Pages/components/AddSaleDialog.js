@@ -643,7 +643,6 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale, custo
                 <InputLabel shrink>Inv. No.</InputLabel>
                 <TextField
                   value={invoiceNo}
-                  onChange={(e) => setInvoiceNo(e.target.value)}
                   readOnly
                   size="small"
                   sx={{ '& .MuiInputBase-root': { height: '40px' } }}

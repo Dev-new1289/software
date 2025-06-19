@@ -24,10 +24,11 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import ReceiptIcon from "@mui/icons-material/Receipt";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const AppSidebar = ({ isSidebarOpen, toggleSidebar, drawerWidth = 240 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [openMenu, setOpenMenu] = React.useState({ 
     dashboard: false, 
     settings: false,
@@ -112,6 +113,15 @@ const AppSidebar = ({ isSidebarOpen, toggleSidebar, drawerWidth = 240 }) => {
     },*/
   ];
 
+  // Helper to check if a menu or its children is active
+  const isMenuActive = (item) => {
+    if (item.path && location.pathname === item.path) return true;
+    if (item.children) {
+      return item.children.some(child => location.pathname === child.path);
+    }
+    return false;
+  };
+
   return (
     <Drawer
       variant={isSidebarOpen ? "persistent" : "temporary"}
@@ -171,16 +181,16 @@ const AppSidebar = ({ isSidebarOpen, toggleSidebar, drawerWidth = 240 }) => {
                     sx={{
                       padding: "10px 20px",
                       cursor: "pointer",
-                      backgroundColor: openMenu[item.text.toLowerCase()] ? "#3f51b5" : "transparent",
+                      backgroundColor: isMenuActive(item) ? "#3f51b5" : (openMenu[item.text.toLowerCase()] ? "#3f51b5" : "transparent"),
                       "&:hover": { backgroundColor: "#3f51b5" },
-                      borderLeft: openMenu[item.text.toLowerCase()] ? "4px solid #fff" : "none",
+                      borderLeft: isMenuActive(item) ? "4px solid #fff" : (openMenu[item.text.toLowerCase()] ? "4px solid #fff" : "none"),
                     }}
                   >
                     <ListItemIcon sx={{ color: "#fff" }}>{item.icon}</ListItemIcon>
                     <ListItemText 
                       primary={item.text}
                       primaryTypographyProps={{
-                        fontWeight: openMenu[item.text.toLowerCase()] ? "bold" : "normal"
+                        fontWeight: isMenuActive(item) ? "bold" : (openMenu[item.text.toLowerCase()] ? "bold" : "normal")
                       }}
                     />
                     {openMenu[item.text.toLowerCase()] ? <ExpandLess /> : <ExpandMore />}
@@ -199,9 +209,9 @@ const AppSidebar = ({ isSidebarOpen, toggleSidebar, drawerWidth = 240 }) => {
                             pl: 6,
                             padding: "8px 20px",
                             cursor: "pointer",
-                            backgroundColor: "#1a1d24",
+                            backgroundColor: location.pathname === subItem.path ? "#50597b" : "#1a1d24",
                             "&:hover": { backgroundColor: "#50597b" },
-                            borderLeft: "2px solid #3f51b5",
+                            borderLeft: location.pathname === subItem.path ? "2px solid #fff" : "2px solid #3f51b5",
                             marginLeft: "8px",
                             marginRight: "8px",
                             borderRadius: "0 4px 4px 0",
@@ -229,7 +239,9 @@ const AppSidebar = ({ isSidebarOpen, toggleSidebar, drawerWidth = 240 }) => {
                   sx={{
                     padding: "10px 20px",
                     cursor: "pointer",
+                    backgroundColor: location.pathname === item.path ? "#3f51b5" : "transparent",
                     "&:hover": { backgroundColor: "#3f51b5" },
+                    borderLeft: location.pathname === item.path ? "4px solid #fff" : "none",
                   }}
                 >
                   <ListItemIcon sx={{ color: "#fff" }}>{item.icon}</ListItemIcon>
