@@ -33,12 +33,11 @@ router.post('/register', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
-});
+}); 
 
 // User Login Route
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
-  console.log("Login request received", req.body);
   try {
     // Find user by email
     const user = await User.findOne({ email });

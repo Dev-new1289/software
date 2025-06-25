@@ -86,6 +86,11 @@ const AppSidebar = ({ isSidebarOpen, toggleSidebar, drawerWidth = 240 }) => {
       icon: <ReceiptIcon />,
       path: "/dashboard/customer-ledger",
     },
+    {
+      text: "Reports",
+      icon: <AssessmentIcon />,
+      path: "/dashboard/reports",
+    },
 /*    {
       text: "Service Management",
       icon: <RoomServiceIcon />,

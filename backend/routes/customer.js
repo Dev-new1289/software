@@ -239,7 +239,6 @@ router.get('/:customerId/details', async (req, res) => {
       // Return the final balance
       return balance; // Return balance as a number
     } catch (error) {
-      console.error("Error calculating customer balance:", error);
       throw new Error("An error occurred while calculating customer balance.");
     }
   }
@@ -401,7 +400,6 @@ router.get('/group/:groupId', async (req, res) => {
 
     res.json({ customers: transformedCustomers });
   } catch (err) {
-    console.error('Error fetching customers by group:', err);
     res.status(500).json({ message: err.message });
   }
 });
@@ -443,7 +441,6 @@ router.get('/group/:groupId/balance', async (req, res) => {
 
     res.json({ customers: transformedCustomers });
   } catch (err) {
-    console.error('Error fetching customers by group:', err);
     res.status(500).json({ message: err.message });
   }
 });
@@ -451,13 +448,11 @@ router.get('/group/:groupId/balance', async (req, res) => {
 // Update all customer balances
 router.post('/update-all-balances', async (req, res) => {
   try {
-    console.log('Starting bulk customer balance update...');
     
     // Get all customers
     const customerId = '684fa79a6a09962c26b46864';
     const customer = await Customer.findById(customerId);
     const customers = customer ? [customer] : [];
-    console.log(`Found ${customers.length} customers to update`);
     
     let updatedCount = 0;
     let errorCount = 0;
@@ -497,17 +492,14 @@ router.post('/update-all-balances', async (req, res) => {
         await Customer.findByIdAndUpdate(customer._id, { balance: balance });
         
         updatedCount++;
-        console.log(`Updated balance for customer: ${customer.customer_name} - New balance: ${balance}`);
         
       } catch (error) {
         errorCount++;
         const errorMsg = `Error updating customer ${customer.customer_name}: ${error.message}`;
         errors.push(errorMsg);
-        console.error(errorMsg);
       }
     }
     
-    console.log(`Bulk update completed. Updated: ${updatedCount}, Errors: ${errorCount}`);
     
     res.json({
       success: true,
@@ -521,7 +513,6 @@ router.post('/update-all-balances', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Error in bulk customer balance update:', error);
     res.status(500).json({
       success: false,
       message: 'Error updating all customer balances',

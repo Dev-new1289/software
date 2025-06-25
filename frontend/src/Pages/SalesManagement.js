@@ -186,7 +186,7 @@ const SalesManagement = () => {
       // 5. Compose printData (match AddSaleDialog)
       setViewPrintData({
         invoiceNo: sale.sale_id,
-        date: sale.date,
+        date: new Date(convertedDate),
         customer: sale.cust_id?.customer_name || sale.customerNameWithAreaAndGroup || '',
         area: customerDetails.area || '',
         items: saleItems.map(item => ({

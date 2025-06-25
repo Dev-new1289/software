@@ -142,7 +142,6 @@ export const parseDDMMYYYYToISO = (dateString) => {
     // If parsing fails, try standard date parsing
     return toLocalISOString(dateString);
   } catch (error) {
-    console.error('Error parsing date:', error);
     // Return current date as fallback
     return getCurrentDateTimeForInput();
   }

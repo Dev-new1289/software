@@ -23,7 +23,9 @@ import {
   IconButton,
   Tooltip,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import { getAreaGroups, getCustomersByGroup } from '../../api';
@@ -39,6 +41,7 @@ const BulkCashEntryDialog = ({ open, onClose, onSave, invNo }) => {
   const inputRefs = useRef([]);
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
 
   const getCurrentDateTimeLocal = () => {
     const now = new Date();
@@ -59,7 +62,7 @@ const BulkCashEntryDialog = ({ open, onClose, onSave, invNo }) => {
           setGroups(response.groups);
         }
       } catch (error) {
-        console.error('Error loading groups:', error);
+        setSnackbar({ open: true, message: error.message || 'Error loading groups', severity: 'error' });
       }
     };
     loadGroups();
@@ -84,7 +87,7 @@ const BulkCashEntryDialog = ({ open, onClose, onSave, invNo }) => {
             setSelectedRowIndex(-1);
           }
         } catch (error) {
-          console.error('Error loading customers:', error);
+          setSnackbar({ open: true, message: error.message || 'Error loading customers', severity: 'error' });
         }
       }
     };
@@ -421,6 +424,17 @@ const BulkCashEntryDialog = ({ open, onClose, onSave, invNo }) => {
           Save Entries
         </Button>
       </DialogActions>
+      {/* Snackbar for errors */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={5000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Dialog>
   );
 };

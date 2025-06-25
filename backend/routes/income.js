@@ -54,7 +54,6 @@ router.get('/grand-total', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error calculating grand total:', error);
     res.status(500).json({
       success: false,
       message: 'Error calculating grand total'
@@ -154,7 +153,6 @@ router.get('/report', async (req, res) => {
               profit: profit || 0
             };
           } catch (itemError) {
-            console.error('Error processing item:', itemError);
             return {
               itemId: 'Unknown',
               name: 'Unknown Item',
@@ -187,7 +185,6 @@ router.get('/report', async (req, res) => {
           profit: totalProfit
         };
       } catch (saleError) {
-        console.error('Error processing sale:', saleError);
         return {
           saleId: 'Unknown',
           date: new Date(),
@@ -218,7 +215,6 @@ router.get('/report', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching income report data:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching income report data'

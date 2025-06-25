@@ -92,7 +92,6 @@ const CashManagement = () => {
         const customersResponse = await getCustomers();
         if (customersResponse && customersResponse.customers) {
           setCustomers(customersResponse.customers);
-          console.log(customersResponse.customers);
         }
       } catch (error) {
         setError(error.message || 'Failed to fetch customers');
@@ -160,9 +159,7 @@ const CashManagement = () => {
       // Safely convert the date to ISO format for datetime-local input
       let dateValue;
       try {
-        console.log('Editing cashData:', cashData);
         const dateSource = cashData.rawDate || cashData.date;
-        console.log('Date source for dialog:', dateSource);
         const date = new Date(dateSource);
         if (isNaN(date.getTime())) {
           // If date is invalid, use current date
@@ -180,9 +177,7 @@ const CashManagement = () => {
           const pad = (n) => n.toString().padStart(2, '0');
           dateValue = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
         }
-        console.log('Date value for dialog:', dateValue);
       } catch (error) {
-        console.error('Date conversion error:', error);
         const now = new Date();
         const karachiTime = new Date(
           now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' })
@@ -256,7 +251,6 @@ const CashManagement = () => {
         }
         dateValue = date.toISOString();
       } catch (error) {
-        console.error('Date conversion error:', error);
         throw new Error('Invalid date format. Please select a valid date and time.');
       }
 
@@ -366,8 +360,9 @@ const CashManagement = () => {
             color="primary"
             startIcon={<AddIcon />}
             onClick={() => handleOpenDialog()}
+            disabled={invNo === 0}
           >
-            Add New Cash Entry
+            {invNo === 0 ? "Loading..." : "Add New Cash Entry"}
           </Button>
         </Box>
       </Box>

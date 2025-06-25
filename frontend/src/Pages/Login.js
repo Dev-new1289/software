@@ -16,7 +16,6 @@ const Login = ({ setAuth }) => {
     e.preventDefault();
     try {
       const { data } = await login(formData);
-      console.log('Token Generated: ' + data.token);
       localStorage.setItem('token', data.token);
       setAuth(true);
       navigate('/dashboard');

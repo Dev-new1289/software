@@ -49,7 +49,6 @@ async function updateCustomerBalance(customerId) {
 
     return balance;
   } catch (error) {
-    console.error("Error updating customer balance:", error);
     throw new Error("An error occurred while updating customer balance.");
   }
 }
@@ -92,7 +91,6 @@ router.get('/all', async (req, res) => {
             const customer = sale.cust_id;
 
             if (!customer) {
-                console.log('No customer found for sale ID:', sale._id);
                 return {
                     ...sale.toObject(),
                     customerNameWithAreaAndGroup: 'Unknown Customer',
@@ -127,7 +125,6 @@ router.get('/all', async (req, res) => {
             },
         });
     } catch (error) {
-        console.error(error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
@@ -135,7 +132,6 @@ router.get('/all', async (req, res) => {
 
 router.post('/save-sale', async (req, res) => {
     const { sale_id,date, cust_id, amount, special_less, remarks, items } = req.body;
-    console.log(req.body);
 
     if (!cust_id) {
         return res.status(400).json({ message: "SELECT THE CUSTOMER FIRST" });
@@ -192,7 +188,6 @@ router.post('/save-sale', async (req, res) => {
 
 router.put('/save-sale', async (req, res) => {
     const { sale_id, date, cust_id, amount, special_less, remarks, items } = req.body;
-    console.log(req.body);
 
     if (!cust_id) {
         return res.status(400).json({ message: "SELECT THE CUSTOMER FIRST" });
@@ -268,7 +263,6 @@ router.put('/save-sale', async (req, res) => {
 
         res.status(200).json({ message: "Sales data updated successfully." });
     } catch (error) {
-        console.error('Error updating sale:', error);
         res.status(500).json({ message: "An error occurred while updating sales data: " + error.message });
     }
 });
@@ -291,14 +285,12 @@ router.get('/sale-items/:saleId', async (req, res) => {
 
         res.status(200).json({ success: true, saleItems });
     } catch (error) {
-        console.error('Error fetching sale items:', error);
         res.status(500).json({ success: false, message: 'Server error while fetching sale items.' });
     }
 });
 
 router.get('/id', async (req, res) => {
     const { searchQuery } = req.query;
-    console.log('searchQuery:', searchQuery);
 
     try {
         let sales = [];
@@ -376,7 +368,6 @@ router.get('/id', async (req, res) => {
                 const customer = sale.cust_id;
 
                 if (!customer) {
-                    console.log('No customer found for sale ID:', sale._id);
                     return {
                         ...sale.toObject(),
                         customerNameWithAreaAndGroup: 'Unknown Customer',
@@ -406,7 +397,6 @@ router.get('/id', async (req, res) => {
         }
 
     } catch (error) {
-        console.error(error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
@@ -424,7 +414,6 @@ router.get('/last-sale-id', async (req, res) => {
             nextSaleId
         });
     } catch (error) {
-        console.error(error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });

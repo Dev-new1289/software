@@ -13,7 +13,9 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  CircularProgress
+  CircularProgress,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { getAreaGroups, getCustomersByGroupWithBalance, getCustomersWithBalance } from '../api';
 
@@ -22,17 +24,17 @@ const AccountReceivable = () => {
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
 
   useEffect(() => {
     const fetchGroups = async () => {
         try {
             const response = await getAreaGroups();
             if (response && response.groups) {
-              console.log(response.groups);
               setGroups(response.groups);
             }
           } catch (error) {
-            console.error('Error loading groups:', error);
+            setSnackbar({ open: true, message: error.message || 'Error loading groups', severity: 'error' });
           }
 
     };
@@ -53,6 +55,7 @@ const AccountReceivable = () => {
         }
       } catch (err) {
         setCustomers([]);
+        setSnackbar({ open: true, message: err.message || 'Error loading customers', severity: 'error' });
       } finally {
         setLoading(false);
       }
@@ -116,6 +119,16 @@ const AccountReceivable = () => {
           </Table>
         </TableContainer>
       )}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={5000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

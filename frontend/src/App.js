@@ -19,6 +19,7 @@ import CashManagement from './Pages/CashManagement';
 import CustomerLedger from './Pages/CustomerLedger';
 import IncomeReport from './Pages/IncomeReport';
 import AccountReceivable from './Pages/AccountReceivable';
+import Reports from './Pages/Reports';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, isAuthenticated, loading }) => {
@@ -159,6 +160,15 @@ const App = () => {
             element: (
               <ProtectedRoute isAuthenticated={isAuthenticated} loading={loading}>
                 <AccountReceivable />
+              </ProtectedRoute>
+            ),
+          },
+          
+          {
+            path: 'reports',
+            element: (
+              <ProtectedRoute isAuthenticated={isAuthenticated} loading={loading}>
+                <Reports />
               </ProtectedRoute>
             ),
           },

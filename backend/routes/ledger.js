@@ -111,7 +111,6 @@ router.get('/customer/:customerId', async (req, res) => {
     // Add sales entries
     salesData.forEach(sale => {
       const amount = Math.round(sale.amount - (sale.amount * (sale.special_less || 0) / 100));
-      console.log(amount);
       ledgerData.push({
         date: sale.date,
         description: `Sales Inv. ${sale.sale_id}`,
@@ -155,7 +154,6 @@ router.get('/customer/:customerId', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching ledger data:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching ledger data'

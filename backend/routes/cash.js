@@ -28,6 +28,7 @@ async function updateCustomerBalance(customerId) {
     // Add total sales to balance
     balance += totalSales;
 
+    
     // Get all cash receipts for this customer
     const received = await CashData.find({ cust_id: customerId });
     
@@ -45,7 +46,6 @@ async function updateCustomerBalance(customerId) {
 
     return balance;
   } catch (error) {
-    console.error("Error updating customer balance:", error);
     throw new Error("An error occurred while updating customer balance.");
   }
 }
@@ -213,7 +213,6 @@ router.get('/search', async (req, res) => {
       }
   
     } catch (error) {
-      console.error(error);
       res.status(500).json({ success: false, message: 'Server error' });
     }
 });
@@ -450,7 +449,6 @@ router.post('/bulk', async (req, res) => {
       cashData: formattedResponse
     });
   } catch (error) {
-    console.error('Error creating bulk cash entries:', error);
     res.status(500).json({
       success: false,
       message: 'Error creating bulk cash entries'

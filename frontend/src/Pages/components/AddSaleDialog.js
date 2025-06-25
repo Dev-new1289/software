@@ -36,8 +36,15 @@ function ItemsTable({ items, onChangeItem, onTabFromTable }) {
 
   // Focus the selected cell whenever it changes
   useEffect(() => {
-    if (inputRefs.current[selectedCell.row]?.[selectedCell.col]) {
-      inputRefs.current[selectedCell.row][selectedCell.col].focus();
+    const input = inputRefs.current[selectedCell.row]?.[selectedCell.col];
+    if (input) {
+      input.focus();
+      // Move cursor to the end of the value
+      const value = input.value;
+      if (typeof value === 'string') {
+        // Set selection range to the end
+        input.setSelectionRange(value.length, value.length);
+      }
     }
   }, [selectedCell]);
 
@@ -121,111 +128,119 @@ function ItemsTable({ items, onChangeItem, onTabFromTable }) {
         </Grid>
       </Grid>
 
-      {/* Data Rows */}
       {items.map((row, rowIndex) => (
-        <Grid
-          container
-          spacing={1}
-          key={rowIndex}
-          sx={{
-            mb: 1,
-            backgroundColor:
-              selectedCell.row === rowIndex ? "action.hover" : "background.paper",
-            borderRadius: 1,
-            p: 1,
-          }}
-        >
-          {/* Item Description */}
-          <Grid item xs={5}>
-            <Box
-              sx={{
-                p: 1,
-                backgroundColor: "background.default",
-                borderRadius: 1,
-              }}
-            >
-              <Typography variant="body2">{row.itemDescription}</Typography>
-            </Box>
-          </Grid>
-
-          {/* Quantity */}
-          <Grid item xs={2} sx={{ minWidth: isSmallScreen ? '65px' : 'auto' }}>
-            <TextField
-              type="number"
-              value={row.qty || ""}
-              onChange={(e) => onChangeItem(rowIndex, "qty", e.target.value)}
-              size="small"
-              fullWidth
-              data-item-row={rowIndex}
-              data-field="qty"
-              inputRef={(el) => {
-                if (!inputRefs.current[rowIndex]) {
-                  inputRefs.current[rowIndex] = [];
-                }
-                inputRefs.current[rowIndex][0] = el;
-              }}
-              onKeyDown={(e) => handleKeyDown(e, rowIndex, 0)}
-              inputProps={{
-                style: { textAlign: "center" },
-                "aria-label": `Quantity for ${row.itemDescription}`,
-              }}
-              sx={{
-                backgroundColor:
-                  selectedCell.row === rowIndex && selectedCell.col === 0
-                    ? "action.selected"
-                    : "background.paper",
-              }}
-            />
-          </Grid>
-
-          {/* Rate */}
-          <Grid item xs={2} sx={{ minWidth: isSmallScreen ? '65px' : 'auto' }}>
-            <TextField
-              type="number"
-              step="0.01"
-              value={row.rate || ""}
-              onChange={(e) => onChangeItem(rowIndex, "rate", e.target.value)}
-              size="small"
-              fullWidth
-              data-item-row={rowIndex}
-              data-field="rate"
-              inputRef={(el) => {
-                if (!inputRefs.current[rowIndex]) {
-                  inputRefs.current[rowIndex] = [];
-                }
-                inputRefs.current[rowIndex][1] = el;
-              }}
-              onKeyDown={(e) => handleKeyDown(e, rowIndex, 1)}
-              inputProps={{
-                style: { textAlign: "center" },
-                "aria-label": `Rate for ${row.itemDescription}`,
-              }}
-              sx={{
-                backgroundColor:
-                  selectedCell.row === rowIndex && selectedCell.col === 1
-                    ? "action.selected"
-                    : "background.paper",
-              }}
-            />
-          </Grid>
-
-          {/* Amount */}
-          <Grid item xs={3}>
-            <Box
-              sx={{
-                p: 1,
-                backgroundColor: "background.default",
-                borderRadius: 1,
-                textAlign: "right",
-              }}
-            >
-              <Typography variant="body2">
-                {row.amount?.toFixed(2) || "0.00"}
-              </Typography>
-            </Box>
-          </Grid>
+      <Grid
+        container
+        spacing={0.5} // Reduced spacing
+        key={rowIndex}
+        sx={{
+          mb: 0.5, // Reduced vertical gap between rows
+          backgroundColor:
+            selectedCell.row === rowIndex ? "action.hover" : "background.paper",
+          borderRadius: 1,
+          p: 0.5, // Reduced overall padding
+        }}
+      >
+        {/* Item Description */}
+        <Grid item xs={5}>
+          <Box
+            sx={{
+              p: 0.5, // Reduced padding
+              backgroundColor: "background.default",
+              borderRadius: 1,
+            }}
+          >
+            <Typography variant="body1" sx={{ fontSize: '1.15rem', fontWeight: 500 }}>
+              {row.itemDescription}
+            </Typography>
+          </Box>
         </Grid>
-      ))}
+
+        {/* Quantity */}
+        <Grid item xs={2} sx={{ minWidth: isSmallScreen ? '60px' : 'auto' }}>
+          <TextField
+            type="text"
+            value={row.qty || ""}
+            onChange={(e) => onChangeItem(rowIndex, "qty", e.target.value)}
+            size="small"
+            fullWidth
+            data-item-row={rowIndex}
+            data-field="qty"
+            inputRef={(el) => {
+              if (!inputRefs.current[rowIndex]) {
+                inputRefs.current[rowIndex] = [];
+              }
+              inputRefs.current[rowIndex][0] = el;
+            }}
+            onKeyDown={(e) => handleKeyDown(e, rowIndex, 0)}
+            onFocus={() => setSelectedCell({ row: rowIndex, col: 0 })}
+            inputProps={{
+              style: { textAlign: "center", fontSize: '1.15rem', fontWeight: 500 },
+              inputMode: 'numeric',
+              pattern: '[0-9]*',
+              "aria-label": `Quantity for ${row.itemDescription}`,
+            }}
+            autoComplete="off"
+            sx={{
+              backgroundColor:
+                selectedCell.row === rowIndex && selectedCell.col === 0
+                  ? "action.selected"
+                  : "background.paper",
+            }}
+          />
+        </Grid>
+
+        {/* Rate */}
+        <Grid item xs={2} sx={{ minWidth: isSmallScreen ? '60px' : 'auto' }}>
+          <TextField
+            type="text"
+            value={row.rate || ""}
+            onChange={(e) => onChangeItem(rowIndex, "rate", e.target.value)}
+            size="small"
+            fullWidth
+            data-item-row={rowIndex}
+            data-field="rate"
+            inputRef={(el) => {
+              if (!inputRefs.current[rowIndex]) {
+                inputRefs.current[rowIndex] = [];
+              }
+              inputRefs.current[rowIndex][1] = el;
+            }}
+            onKeyDown={(e) => handleKeyDown(e, rowIndex, 1)}
+            onFocus={() => setSelectedCell({ row: rowIndex, col: 1 })}
+            inputProps={{
+              style: { textAlign: "center", fontSize: '1.15rem', fontWeight: 500 },
+              inputMode: 'decimal',
+              pattern: '[0-9.]*',
+              "aria-label": `Rate for ${row.itemDescription}`,
+            }}
+            autoComplete="off"
+            sx={{
+              backgroundColor:
+                selectedCell.row === rowIndex && selectedCell.col === 1
+                  ? "action.selected"
+                  : "background.paper",
+            }}
+          />
+        </Grid>
+
+        {/* Amount */}
+        <Grid item xs={3}>
+          <Box
+            sx={{
+              p: 0.5, // Reduced padding
+              backgroundColor: "background.default",
+              borderRadius: 1,
+              textAlign: "right",
+            }}
+          >
+            <Typography variant="body1" sx={{ fontSize: '0.95rem' }}>
+              {row.amount?.toFixed(2) || "0.00"}
+            </Typography>
+          </Box>
+        </Grid>
+      </Grid>
+    ))}
     </Box>
   );
 }
@@ -318,7 +333,6 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale, custo
 
   async function loadSaleData(sale) {
     try {
-      console.log(sale);
       // Use passed customers prop instead of API call
       setInvoiceNo(sale.sale_id);
       
@@ -446,7 +460,6 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale, custo
   };
 
   const handleTabFromTable = () => {
-    console.log('handleTabFromTable called, focusing on remarks');
     if (remarksInputRef.current) {
       remarksInputRef.current.focus();
       // Move cursor to the end of the text
@@ -714,7 +727,7 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale, custo
             <Grid item xs={12} md={4}>
               <Grid container spacing={2}>
                 <Grid item xs={12}>
-                  <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
                     <LabelledInput label="Net Amount" value={netAmount.toFixed(2)} readOnly />
                     <LabelledInput
                       label="Special Less"

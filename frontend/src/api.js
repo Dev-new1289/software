@@ -128,7 +128,6 @@ export const editSale = async (saleData) => {
 
 // getCustomerDetails.js
 export async function getCustomerDetails(customerId, date, invoiceId) {
-  console.log(customerId, date, invoiceId)
   const response = await API.get(`/api/customers/${customerId}/details`, {
     params: {
       date,
@@ -188,7 +187,6 @@ export const addArea = async (areaData) => {
 
 export const editArea = async (id, areaData) => {
   try {
-    console.log(id, areaData)
     const response = await API.put(`/api/customers/areas/${id}`, areaData);
     return response.data;
   } catch (error) {
@@ -226,7 +224,6 @@ export const addAreaGroup = async (groupData) => {
 
 export const editAreaGroup = async (id, groupData) => {
   try {
-    console.log(id, groupData)
     const response = await API.put(`/api/customers/area-groups/${id}`, groupData);
     return response.data;
   } catch (error) {
@@ -402,6 +399,31 @@ export const getIncomeGrandTotal = async (startDate, endDate) => {
     return response.data;
   } catch (error) {
     throw error.response?.data?.message || 'Error fetching grand total';
+  }
+};
+
+// Reports API functions
+export const getSalesSummaryReport = async (start, end) => {
+  try {
+    // TODO: Confirm backend endpoint and params
+    const response = await API.get(`/api/reports/sales-summary`, {
+      params: { start, end }
+    });
+    return response.data;
+  } catch (error) {
+    throw handleApiError(error);
+  }
+};
+
+export const getItemsSoldByMonthReport = async (start, end) => {
+  try {
+    // TODO: Confirm backend endpoint and params
+    const response = await API.get(`/api/reports/items-sold`, {
+      params: { start, end }
+    });
+    return response.data;
+  } catch (error) {
+    throw handleApiError(error);
   }
 };
 
