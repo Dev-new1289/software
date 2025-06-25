@@ -11,25 +11,19 @@ function getMonthString(date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
-function toLocalDate(dateStr, h, m, s, ms) {
-  const d = new Date(dateStr + 'T00:00:00'); // force local time
-  d.setHours(h, m, s, ms);
-  return d;
-}
-
 // GET /api/reports/sales-summary?start=YYYY-MM-DD&end=YYYY-MM-DD
 router.get('/sales-summary', async (req, res) => {
   try {
     const { start, end } = req.query;
     const startDate = new Date(start);
     const endDate = new Date(end);
-    const startDateTime = toLocalDate(startDate, 0, 0, 0, 0);
-    const endDateTime = toLocalDate(endDate, 23, 59, 59, 999);
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
 
     // Fetch all sales in range
-    const sales = await Sales.find({ date: { $gte: startDateTime, $lte: endDateTime } });
+    const sales = await Sales.find({ date: { $gte: startDate, $lte: endDate } });
     // Fetch all cash in range
-    const cashData = await CashData.find({ date: { $gte: startDateTime, $lte: endDateTime } });
+    const cashData = await CashData.find({ date: { $gte: startDate, $lte: endDate } });
 
     // Group by month
     const summary = {};
@@ -76,11 +70,11 @@ router.get('/items-sold', async (req, res) => {
     const { start, end } = req.query;
     const startDate = new Date(start);
     const endDate = new Date(end);
-    const startDateTime = toLocalDate(startDate, 0, 0, 0, 0);
-    const endDateTime = toLocalDate(endDate, 23, 59, 59, 999);
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
 
     // Fetch all sales in range
-    const sales = await Sales.find({ date: { $gte: startDateTime, $lte: endDateTime } });
+    const sales = await Sales.find({ date: { $gte: startDate, $lte: endDate } });
     // For each sale, get its items
     const itemsByMonth = {};
     for (const sale of sales) {
