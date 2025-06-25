@@ -11,19 +11,25 @@ function getMonthString(date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
+function toLocalDate(dateStr, h, m, s, ms) {
+  const d = new Date(dateStr + 'T00:00:00'); // force local time
+  d.setHours(h, m, s, ms);
+  return d;
+}
+
 // GET /api/reports/sales-summary?start=YYYY-MM-DD&end=YYYY-MM-DD
 router.get('/sales-summary', async (req, res) => {
   try {
     const { start, end } = req.query;
     const startDate = new Date(start);
     const endDate = new Date(end);
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setHours(23, 59, 59, 999);
+    const startDateTime = new Date(startDate + 'T00:00:00.000Z');
+    const endDateTime = new Date(endDate + 'T23:59:59.999Z');
 
     // Fetch all sales in range
-    const sales = await Sales.find({ date: { $gte: startDate, $lte: endDate } });
+    const sales = await Sales.find({ date: { $gte: startDateTime, $lte: endDateTime } });
     // Fetch all cash in range
-    const cashData = await CashData.find({ date: { $gte: startDate, $lte: endDate } });
+    const cashData = await CashData.find({ date: { $gte: startDateTime, $lte: endDateTime } });
 
     // Group by month
     const summary = {};
@@ -70,11 +76,11 @@ router.get('/items-sold', async (req, res) => {
     const { start, end } = req.query;
     const startDate = new Date(start);
     const endDate = new Date(end);
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setHours(23, 59, 59, 999);
+    const startDateTime = new Date(startDate + 'T00:00:00.000Z');
+    const endDateTime = new Date(endDate + 'T23:59:59.999Z');
 
     // Fetch all sales in range
-    const sales = await Sales.find({ date: { $gte: startDate, $lte: endDate } });
+    const sales = await Sales.find({ date: { $gte: startDateTime, $lte: endDateTime } });
     // For each sale, get its items
     const itemsByMonth = {};
     for (const sale of sales) {
@@ -88,25 +94,31 @@ router.get('/items-sold', async (req, res) => {
         itemsByMonth[month][key] += item.quantity;
       }
     }
-    // Get item names
+    // Get item names and sequence
     const allItemIds = Array.from(new Set(
       Object.values(itemsByMonth).flatMap(monthObj => Object.keys(monthObj))
     ));
     const itemDocs = await Inventories.find({ _id: { $in: allItemIds } });
-    const itemIdToName = {};
+    const itemIdToInfo = {};
     itemDocs.forEach(item => {
-      itemIdToName[item._id] = `${item.length} ${item.gauge}`;
+      itemIdToInfo[item._id] = {
+        name: `${item.length} ${item.gauge}`,
+        sequence: item.sequence
+      };
     });
-    // Format result: [{ month, [itemName]: qty, ... }]
+    // Format result: [{ month, items: [{ name, quantity, sequence }, ...] }]
     const result = Object.entries(itemsByMonth)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([month, items]) => {
-        const row = { month };
-        Object.entries(items).forEach(([itemId, qty]) => {
-          const name = itemIdToName[itemId] || itemId;
-          row[name] = qty;
+        const itemsArr = Object.entries(items).map(([itemId, qty]) => {
+          const info = itemIdToInfo[itemId] || { name: itemId, sequence: '' };
+          return {
+            name: info.name,
+            quantity: qty,
+            sequence: info.sequence || ''
+          };
         });
-        return row;
+        return { month, items: itemsArr };
       });
     res.json({ data: result });
   } catch (err) {

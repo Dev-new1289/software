@@ -81,10 +81,12 @@ export default function Reports() {
     if (!data || data.length === 0) return [];
     // Only one month row is expected
     const monthRow = data[0];
-    // Use the order and names as provided by the backend
-    return Object.entries(monthRow)
-      .filter(([key]) => key !== 'month')
-      .map(([item, quantity]) => ({ item, quantity }));
+    if (!monthRow.items) return [];
+    // Sort items by sequence (as string, numeric-aware)
+    const sortedItems = [...monthRow.items].sort((a, b) =>
+      (a.sequence || '').localeCompare(b.sequence || '', undefined, { numeric: true })
+    );
+    return sortedItems.map(({ name, quantity }) => ({ item: name, quantity }));
   }
 
   function ItemsSoldReport({ data }) {
