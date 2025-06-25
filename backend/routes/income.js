@@ -16,9 +16,12 @@ router.get('/grand-total', async (req, res) => {
       });
     }
 
-    // Create proper date range to include full days (UTC)
-    const startDateTime = new Date(startDate + 'T00:00:00.000Z'); // Start of day UTC
-    const endDateTime = new Date(endDate + 'T23:59:59.999Z');   // End of day UTC
+    // Create proper date range to include full days
+    const startDateTime = new Date(startDate);
+    startDateTime.setHours(0, 0, 0, 0); // Start of day
+    
+    const endDateTime = new Date(endDate);
+    endDateTime.setHours(23, 59, 59, 999); // End of day
 
     // Get all sales items for the date range
     const sales = await Sales.find({
@@ -74,9 +77,12 @@ router.get('/report', async (req, res) => {
       });
     }
 
-    // Create proper date range to include full days (UTC)
-    const startDateTime = new Date(startDate + 'T00:00:00.000Z'); // Start of day UTC
-    const endDateTime = new Date(endDate + 'T23:59:59.999Z');   // End of day UTC
+    // Create proper date range to include full days
+    const startDateTime = new Date(startDate);
+    startDateTime.setHours(0, 0, 0, 0); // Start of day
+    
+    const endDateTime = new Date(endDate);
+    endDateTime.setHours(23, 59, 59, 999); // End of day
 
     // Get total count of sales for pagination
     const totalSales = await Sales.countDocuments({

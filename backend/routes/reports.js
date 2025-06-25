@@ -23,8 +23,8 @@ router.get('/sales-summary', async (req, res) => {
     const { start, end } = req.query;
     const startDate = new Date(start);
     const endDate = new Date(end);
-    const startDateTime = new Date(startDate + 'T00:00:00.000Z');
-    const endDateTime = new Date(endDate + 'T23:59:59.999Z');
+    const startDateTime = toLocalDate(startDate, 0, 0, 0, 0);
+    const endDateTime = toLocalDate(endDate, 23, 59, 59, 999);
 
     // Fetch all sales in range
     const sales = await Sales.find({ date: { $gte: startDateTime, $lte: endDateTime } });
@@ -76,8 +76,8 @@ router.get('/items-sold', async (req, res) => {
     const { start, end } = req.query;
     const startDate = new Date(start);
     const endDate = new Date(end);
-    const startDateTime = new Date(startDate + 'T00:00:00.000Z');
-    const endDateTime = new Date(endDate + 'T23:59:59.999Z');
+    const startDateTime = toLocalDate(startDate, 0, 0, 0, 0);
+    const endDateTime = toLocalDate(endDate, 23, 59, 59, 999);
 
     // Fetch all sales in range
     const sales = await Sales.find({ date: { $gte: startDateTime, $lte: endDateTime } });
