@@ -20,12 +20,14 @@ import {
 } from '@mui/material';
 import { getCustomers, getCustomerLedger } from '../api';
 import { formatDate, getCurrentDateForInput } from '../utils/dateUtils';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const CustomerLedger = () => {
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
   const [ledgerData, setLedgerData] = useState([]);
   const [customerDetails, setCustomerDetails] = useState(null);
   const [error, setError] = useState('');
@@ -33,7 +35,7 @@ const CustomerLedger = () => {
 
   // Set current date to both start and end date fields on component mount
   useEffect(() => {
-    const currentDate = getCurrentDateForInput();
+    const currentDate = new Date();
     setStartDate(currentDate);
     setEndDate(currentDate);
   }, []);
@@ -65,10 +67,14 @@ const CustomerLedger = () => {
 
     setLoading(true);
     try {
+      // Convert Date objects to YYYY-MM-DD format for API
+      const startDateStr = startDate.toISOString().split('T')[0];
+      const endDateStr = endDate.toISOString().split('T')[0];
+      
       const response = await getCustomerLedger(
         selectedCustomer,
-        startDate,
-        endDate
+        startDateStr,
+        endDateStr
       );
 
       if (response.success) {
@@ -118,24 +124,46 @@ const CustomerLedger = () => {
             </FormControl>
           </Grid>
           <Grid item xs={12} md={3}>
-            <TextField
-              fullWidth
-              label="Start Date"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
+            <Box>
+              <Typography variant="body2" sx={{ mb: 1, fontWeight: 600 }}>
+                Start Date
+              </Typography>
+              <DatePicker
+                selected={startDate}
+                onChange={(date) => setStartDate(date)}
+                dateFormat="dd/MM/yyyy"
+                placeholderText="Select start date"
+                isClearable={false}
+                customInput={
+                  <TextField
+                    fullWidth
+                    size="small"
+                    InputLabelProps={{ shrink: false }}
+                  />
+                }
+              />
+            </Box>
           </Grid>
           <Grid item xs={12} md={3}>
-            <TextField
-              fullWidth
-              label="End Date"
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
+            <Box>
+              <Typography variant="body2" sx={{ mb: 1, fontWeight: 600 }}>
+                End Date
+              </Typography>
+              <DatePicker
+                selected={endDate}
+                onChange={(date) => setEndDate(date)}
+                dateFormat="dd/MM/yyyy"
+                placeholderText="Select end date"
+                isClearable={false}
+                customInput={
+                  <TextField
+                    fullWidth
+                    size="small"
+                    InputLabelProps={{ shrink: false }}
+                  />
+                }
+              />
+            </Box>
           </Grid>
           <Grid item xs={12} md={3}>
             <Button

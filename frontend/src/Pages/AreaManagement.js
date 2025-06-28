@@ -269,15 +269,7 @@ const AreaManagement = () => {
         <Typography variant="h4" component="h1" gutterBottom>
           Area Management
         </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-          disabled={isLoading}
-        >
-          Add New {activeTab === 0 ? 'Area' : 'Group'}
-        </Button>
+
       </Box>
 
       <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 3 }}>
@@ -297,6 +289,20 @@ const AreaManagement = () => {
         onChange={handleSortChange} 
         fields={activeTab === 0 ? ['area_name', 'group_name'] : ['area_group']} 
       />
+
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<AddIcon />}
+          onClick={() => handleOpenDialog()}
+          disabled={isLoading}
+        >
+          Add New {activeTab === 0 ? 'Area' : 'Group'}
+        </Button>
+      </Box>
+
+
 
       {activeTab === 0 ? (
         <AreaTable

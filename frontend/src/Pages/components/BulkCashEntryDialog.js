@@ -28,6 +28,8 @@ import {
   Alert
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { getAreaGroups, getCustomersByGroup } from '../../api';
 import { convertToWords } from '../../utils/numberToWords';
 
@@ -43,16 +45,7 @@ const BulkCashEntryDialog = ({ open, onClose, onSave, invNo }) => {
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
 
-  const getCurrentDateTimeLocal = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-  };
-  const [date, setDate] = useState(getCurrentDateTimeLocal());
+  const [date, setDate] = useState(new Date());
 
   useEffect(() => {
     const loadGroups = async () => {
@@ -92,7 +85,18 @@ const BulkCashEntryDialog = ({ open, onClose, onSave, invNo }) => {
       }
     };
     loadCustomers();
-  }, [selectedGroup, invNo, date, detail]);
+  }, [selectedGroup, invNo]);
+
+  // Separate useEffect to update date and detail in existing cash entries
+  useEffect(() => {
+    if (cashEntries.length > 0) {
+      setCashEntries(prev => prev.map(entry => ({
+        ...entry,
+        date: date,
+        detail: detail
+      })));
+    }
+  }, [date, detail]);
 
   const handleAmountChange = (customerId, amount) => {
     setCashEntries(prev => prev.map(entry => 
@@ -247,13 +251,23 @@ const BulkCashEntryDialog = ({ open, onClose, onSave, invNo }) => {
                 >
                   Date
                 </Typography>
-                <TextField
-                  type="datetime-local"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  variant="outlined"
-                  size="small"
-                  InputLabelProps={{ shrink: false }}
+                <DatePicker
+                  selected={date}
+                  onChange={(date) => setDate(date)}
+                  dateFormat="dd/MM/yyyy HH:mm"
+                  showTimeSelect
+                  timeFormat="HH:mm"
+                  timeIntervals={15}
+                  timeCaption="Time"
+                  placeholderText="Select date and time"
+                  isClearable={false}
+                  customInput={
+                    <TextField
+                      variant="outlined"
+                      size="small"
+                      InputLabelProps={{ shrink: false }}
+                    />
+                  }
                 />
               </Box>
             </Grid>
@@ -376,12 +390,6 @@ const BulkCashEntryDialog = ({ open, onClose, onSave, invNo }) => {
                 </TableBody>
               </Table>
             </TableContainer>
-            
-            <Box sx={{ mt: 2, p: 2, backgroundColor: 'primary.light', borderRadius: 1 }}>
-              <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.contrastText' }}>
-                Total Amount: PKR {totalAmount.toLocaleString('en-PK')}
-              </Typography>
-            </Box>
           </Box>
         )}
       </DialogContent>
@@ -392,37 +400,58 @@ const BulkCashEntryDialog = ({ open, onClose, onSave, invNo }) => {
           py: 2, 
           borderTop: '1px solid',
           borderColor: 'divider',
-          gap: 1
+          gap: 1,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
         }}
       >
-        <Button 
-          onClick={onClose} 
-          variant="outlined"
-          sx={{ 
-            minWidth: 80,
-            textTransform: 'none',
-            fontWeight: 500
-          }}
-        >
-          Cancel
-        </Button>
-        <Button 
-          onClick={handleSave} 
-          color="primary" 
-          variant="contained"
-          disabled={!selectedGroup || customers.length === 0}
-          sx={{ 
-            minWidth: 80,
-            textTransform: 'none',
-            fontWeight: 500,
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-            '&:hover': {
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
-            }
-          }}
-        >
-          Save Entries
-        </Button>
+        {/* Total Amount Display */}
+        {selectedGroup && customers.length > 0 && (
+          <Box sx={{ 
+            p: 2, 
+            backgroundColor: 'primary.light', 
+            borderRadius: 1,
+            flex: 1,
+            mr: 2
+          }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.contrastText' }}>
+              Total Amount: PKR {totalAmount.toLocaleString('en-PK')}
+            </Typography>
+          </Box>
+        )}
+        
+        {/* Buttons */}
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button 
+            onClick={onClose} 
+            variant="outlined"
+            sx={{ 
+              minWidth: 80,
+              textTransform: 'none',
+              fontWeight: 500
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSave} 
+            color="primary" 
+            variant="contained"
+            disabled={!selectedGroup || customers.length === 0}
+            sx={{ 
+              minWidth: 80,
+              textTransform: 'none',
+              fontWeight: 500,
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+              '&:hover': {
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+              }
+            }}
+          >
+            Save Entries
+          </Button>
+        </Box>
       </DialogActions>
       {/* Snackbar for errors */}
       <Snackbar

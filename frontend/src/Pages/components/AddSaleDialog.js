@@ -19,6 +19,8 @@ import {
   useMediaQuery,
   Paper,
 } from "@mui/material";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 import LabelledInput from "./LabelledInput";
 import { getCustomerDetails, saveSale, editSale, getSaleItems } from "../../api"; // Import the new API function
@@ -251,9 +253,7 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale, custo
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
 
   const [invoiceNo, setInvoiceNo] = useState(0);
-  const [date, setDate] = useState(
-    new Date().toLocaleString('en-GB', { timeZone: 'Asia/Karachi' }).substring(0, 19)
-  );
+  const [date, setDate] = useState(new Date());
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [area, setArea] = useState("");
   const [specialLess, setSpecialLess] = useState("");
@@ -311,20 +311,7 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale, custo
         setLessAmount(0);
         setReceivable(0);
         setTotalAmount(0);
-        const now = new Date();
-        const karachiTime = new Date(
-          now.toLocaleString('en-US', { timeZone: 'Asia/Karachi' })
-        );
-        
-        const year = karachiTime.getFullYear();
-        const month = String(karachiTime.getMonth() + 1).padStart(2, '0');
-        const day = String(karachiTime.getDate()).padStart(2, '0');
-        const hours = String(karachiTime.getHours()).padStart(2, '0');
-        const minutes = String(karachiTime.getMinutes()).padStart(2, '0');
-        
-        const datetimeString = `${year}-${month}-${day}T${hours}:${minutes}`;
-        
-        setDate(datetimeString);
+        setDate(new Date());
       }
     } catch (err) {
       setSnackbar({ open: true, message: err.message || 'Error', severity: 'error' });
@@ -336,9 +323,9 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale, custo
       // Use passed customers prop instead of API call
       setInvoiceNo(sale.sale_id);
       
-      // Parse the date from DD/MM/YYYY HH:MM format to ISO format
+      // Parse the date from DD/MM/YYYY HH:MM format to Date object
       const isoDate = parseDDMMYYYYToISO(sale.date);
-      setDate(isoDate);
+      setDate(new Date(isoDate));
       
       setSelectedCustomerId(sale.cust_id._id);
       setSpecialLess(sale.special_less?.toString() || "");
@@ -378,10 +365,10 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale, custo
   useEffect(() => {
     if (selectedCustomerId) {
       if (editingSale){
-        fetchCustomerDetails(selectedCustomerId, date, editingSale._id);
+        fetchCustomerDetails(selectedCustomerId, convertDateForBackend(date), editingSale._id);
       }
       else{
-        fetchCustomerDetails(selectedCustomerId, date);
+        fetchCustomerDetails(selectedCustomerId, convertDateForBackend(date));
       }
     }
   }, [selectedCustomerId, date]);
@@ -447,10 +434,6 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale, custo
     handleKeyDown(e, 'customer');
   };
 
-  const handleDateChange = (e) => {
-    setDate(e.target.value);
-  };
-
   const handleDateKeyDown = (e) => {
     handleKeyDown(e, 'date');
   };
@@ -468,10 +451,11 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale, custo
     }
   };
 
-  // Convert datetime-local format to proper Date object for backend
-  const convertDateForBackend = (dateString) => {
-    if (!dateString) return new Date();
-    return new Date(dateString);
+  // Convert Date object to proper Date object for backend
+  const convertDateForBackend = (dateValue) => {
+    if (!dateValue) return new Date();
+    if (dateValue instanceof Date) return dateValue;
+    return new Date(dateValue);
   };
 
   const handlePrintClick = async () => {
@@ -535,7 +519,7 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale, custo
 
   const printData = {
     invoiceNo,
-    date,
+    date: date,
     customer: getSelectedCustomerName(),
     area,
     items,
@@ -666,17 +650,27 @@ export default function AddSaleDialog({ open, onClose, invNo, editingSale, custo
             <Grid item xs={12} sm={6} md={3}>
               <Box>
                 <InputLabel shrink>Date</InputLabel>
-                <TextField
-                  type="datetime-local" // Allow date and time selection
-                  value={date}
-                  onChange={handleDateChange}
-                  onKeyDown={handleDateKeyDown}
-                  fullWidth
-                  size="small"
-                  inputRef={dateInputRef}
-                  sx={{ '& .MuiInputBase-root': { height: '40px' } }}
-                />
-              </Box>
+                  <DatePicker
+                    selected={date}
+                    onChange={(date) => setDate(date)}
+                    dateFormat="dd/MM/yyyy HH:mm"
+                    showTimeSelect
+                    timeFormat="HH:mm"
+                    timeIntervals={15}
+                    timeCaption="Time"
+                    placeholderText="Select date and time"
+                    isClearable={false}
+                    customInput={
+                      <TextField
+                        size="small"
+                        fullWidth
+                        inputRef={dateInputRef}
+                        onKeyDown={handleDateKeyDown}
+                        sx={{ '& .MuiInputBase-root': { height: '40px' } }}
+                      />
+                    }
+                  />
+                </Box>
             </Grid>
             <Grid item xs={12} sm={6} md={4}>
               <Box>

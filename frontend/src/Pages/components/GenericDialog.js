@@ -17,6 +17,8 @@ import {
   Tooltip
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const GenericDialog = ({ 
   open, 
@@ -43,6 +45,14 @@ const GenericDialog = ({
   const handleInputChange = (field) => (event) => {
     const newValue = event.target.value;
     const newFormData = { ...formData, [field]: newValue };
+    setFormData(newFormData);
+    if (setData) {
+      setData(newFormData);
+    }
+  };
+
+  const handleDateChange = (field) => (date) => {
+    const newFormData = { ...formData, [field]: date };
     setFormData(newFormData);
     if (setData) {
       setData(newFormData);
@@ -128,55 +138,108 @@ const GenericDialog = ({
                 </Typography>
                 
                 {/* Field Input */}
-                <TextField
-                  variant="outlined"
-                  fullWidth
-                  size="small"
-                  value={formData[field.name] || ''}
-                  onChange={handleInputChange(field.name)}
-                  type={field.type === 'select' ? 'text' : field.type || 'text'}
-                  multiline={field.multiline || false}
-                  rows={field.rows || 1}
-                  select={field.type === 'select'}
-                  required={field.required || false}
-                  helperText={field.helperText}
-                  error={field.error}
-                  placeholder={field.placeholder}
-                  InputProps={{
-                    readOnly: field.readOnly || false,
-                    startAdornment: field.startAdornment,
-                    endAdornment: field.endAdornment,
-                    sx: {
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: field.readOnly ? 'rgba(0, 0, 0, 0.12)' : undefined,
+                {field.type === 'datepicker' ? (
+                  <DatePicker
+                    selected={formData[field.name] ? new Date(formData[field.name]) : null}
+                    onChange={handleDateChange(field.name)}
+                    dateFormat="dd/MM/yyyy HH:mm"
+                    showTimeSelect
+                    timeFormat="HH:mm"
+                    timeIntervals={15}
+                    timeCaption="Time"
+                    placeholderText="Select date and time"
+                    isClearable={false}
+                    customInput={
+                      <TextField
+                        variant="outlined"
+                        fullWidth
+                        size="small"
+                        required={field.required || false}
+                        helperText={field.helperText}
+                        error={field.error}
+                        placeholder={field.placeholder}
+                        InputProps={{
+                          readOnly: field.readOnly || false,
+                          startAdornment: field.startAdornment,
+                          endAdornment: field.endAdornment,
+                          sx: {
+                            '& .MuiOutlinedInput-notchedOutline': {
+                              borderColor: field.readOnly ? 'rgba(0, 0, 0, 0.12)' : undefined,
+                            },
+                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                              borderColor: field.readOnly ? 'rgba(0, 0, 0, 0.12)' : undefined,
+                            },
+                            backgroundColor: field.readOnly ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
+                          }
+                        }}
+                        InputLabelProps={{
+                          shrink: false,
+                          sx: {
+                            color: field.readOnly ? 'rgba(0, 0, 0, 0.6)' : undefined,
+                          }
+                        }}
+                        sx={{
+                          '& .MuiInputLabel-root.Mui-focused': {
+                            color: field.readOnly ? 'rgba(0, 0, 0, 0.6)' : 'primary.main',
+                          },
+                          '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            borderColor: field.readOnly ? 'rgba(0, 0, 0, 0.12)' : 'primary.main',
+                          }
+                        }}
+                      />
+                    }
+                  />
+                ) : (
+                  <TextField
+                    variant="outlined"
+                    fullWidth
+                    size="small"
+                    value={formData[field.name] || ''}
+                    onChange={handleInputChange(field.name)}
+                    type={field.type === 'select' ? 'text' : field.type || 'text'}
+                    multiline={field.multiline || false}
+                    rows={field.rows || 1}
+                    select={field.type === 'select'}
+                    required={field.required || false}
+                    helperText={field.helperText}
+                    error={field.error}
+                    placeholder={field.placeholder}
+                    InputProps={{
+                      readOnly: field.readOnly || false,
+                      startAdornment: field.startAdornment,
+                      endAdornment: field.endAdornment,
+                      sx: {
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: field.readOnly ? 'rgba(0, 0, 0, 0.12)' : undefined,
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: field.readOnly ? 'rgba(0, 0, 0, 0.12)' : undefined,
+                        },
+                        backgroundColor: field.readOnly ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
+                      }
+                    }}
+                    InputLabelProps={{
+                      shrink: false, // Don't show the built-in label since we have custom ones
+                      sx: {
+                        color: field.readOnly ? 'rgba(0, 0, 0, 0.6)' : undefined,
+                      }
+                    }}
+                    sx={{
+                      '& .MuiInputLabel-root.Mui-focused': {
+                        color: field.readOnly ? 'rgba(0, 0, 0, 0.6)' : 'primary.main',
                       },
-                      '&:hover .MuiOutlinedInput-notchedOutline': {
-                        borderColor: field.readOnly ? 'rgba(0, 0, 0, 0.12)' : undefined,
-                      },
-                      backgroundColor: field.readOnly ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
-                    }
-                  }}
-                  InputLabelProps={{
-                    shrink: false, // Don't show the built-in label since we have custom ones
-                    sx: {
-                      color: field.readOnly ? 'rgba(0, 0, 0, 0.6)' : undefined,
-                    }
-                  }}
-                  sx={{
-                    '& .MuiInputLabel-root.Mui-focused': {
-                      color: field.readOnly ? 'rgba(0, 0, 0, 0.6)' : 'primary.main',
-                    },
-                    '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: field.readOnly ? 'rgba(0, 0, 0, 0.12)' : 'primary.main',
-                    }
-                  }}
-                >
-                  {field.type === 'select' && field.options && field.options.map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </TextField>
+                      '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: field.readOnly ? 'rgba(0, 0, 0, 0.12)' : 'primary.main',
+                      }
+                    }}
+                  >
+                    {field.type === 'select' && field.options && field.options.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
               </Box>
             </Grid>
           ))}

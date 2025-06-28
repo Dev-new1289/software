@@ -28,10 +28,12 @@ import {
 import { getIncomeReport, getIncomeGrandTotal, getGrandTotalProfit } from '../api';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import { formatDate, getCurrentDateForInput } from '../utils/dateUtils';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const IncomeReport = () => {
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
   const [reportData, setReportData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -41,7 +43,7 @@ const IncomeReport = () => {
 
   // Set current date to both start and end date fields on component mount
   useEffect(() => {
-    const currentDate = getCurrentDateForInput();
+    const currentDate = new Date();
     setStartDate(currentDate);
     setEndDate(currentDate);
   }, []);
@@ -54,13 +56,17 @@ const IncomeReport = () => {
 
     setLoading(true);
     try {
-      const response = await getIncomeReport(startDate, endDate, pageNumber, limit);
+      // Convert Date objects to YYYY-MM-DD format for API
+      const startDateStr = startDate.toISOString().split('T')[0];
+      const endDateStr = endDate.toISOString().split('T')[0];
+      
+      const response = await getIncomeReport(startDateStr, endDateStr, pageNumber, limit);
       if (response.success) {
         setReportData(response);
         setPage(pageNumber);
 
         if (response.pagination.isLastPage && !grandTotal) {
-          const grandTotalData = await getIncomeGrandTotal(startDate, endDate);
+          const grandTotalData = await getIncomeGrandTotal(startDateStr, endDateStr);
           setGrandTotal(grandTotalData.grandTotalProfit);
         }
       } else {
@@ -186,39 +192,48 @@ const IncomeReport = () => {
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={4}>
-            <TextField
-              fullWidth
-              label="Start Date"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
+            <Box>
+              <Typography variant="body2" sx={{ mb: 1, fontWeight: 600 }}>
+                Start Date
+              </Typography>
+              <DatePicker
+                selected={startDate}
+                onChange={(date) => setStartDate(date)}
+                dateFormat="dd/MM/yyyy"
+                placeholderText="Select start date"
+                isClearable={false}
+                customInput={
+                  <TextField
+                    fullWidth
+                    size="small"
+                    InputLabelProps={{ shrink: false }}
+                  />
+                }
+              />
+            </Box>
           </Grid>
           <Grid item xs={12} md={4}>
-            <TextField
-              fullWidth
-              label="End Date"
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
+            <Box>
+              <Typography variant="body2" sx={{ mb: 1, fontWeight: 600 }}>
+                End Date
+              </Typography>
+              <DatePicker
+                selected={endDate}
+                onChange={(date) => setEndDate(date)}
+                dateFormat="dd/MM/yyyy"
+                placeholderText="Select end date"
+                isClearable={false}
+                customInput={
+                  <TextField
+                    fullWidth
+                    size="small"
+                    InputLabelProps={{ shrink: false }}
+                  />
+                }
+              />
+            </Box>
           </Grid>
-          <Grid item xs={12} md={2}>
-            <FormControl fullWidth>
-              <InputLabel>Items per page</InputLabel>
-              <Select
-                value={limit}
-                onChange={handleLimitChange}
-                label="Items per page"
-              >
-                <MenuItem value={5}>5</MenuItem>
-                <MenuItem value={10}>10</MenuItem>
 
-              </Select>
-            </FormControl>
-          </Grid>
           <Grid item xs={12} md={2}>
             <Button
               variant="contained"
