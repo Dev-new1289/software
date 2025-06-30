@@ -191,8 +191,11 @@ const SalesManagement = () => {
         area: customerDetails.area || '',
         items: saleItems
           .slice() // create a shallow copy to avoid mutating original
-          .sort((a, b) => (a.item_id.sequence ?? 0) - (b.item_id.sequence ?? 0))
-          .map(item => ({
+          .sort((a, b) => {
+            // Sort by sequence as strings
+            return a.item_id.sequence.localeCompare(b.item_id.sequence, undefined, { numeric: true });
+          })
+            .map(item => ({
             ...item,
             itemDescription: item.item_id?.length + ' ' + item.item_id?.gauge,
             qty: item.quantity,
