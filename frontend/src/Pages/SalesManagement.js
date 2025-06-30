@@ -191,7 +191,7 @@ const SalesManagement = () => {
         area: customerDetails.area || '',
         items: saleItems
           .slice() // create a shallow copy to avoid mutating original
-          .sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0))
+          .sort((a, b) => (a.item_id.sequence ?? 0) - (b.item_id.sequence ?? 0))
           .map(item => ({
             ...item,
             itemDescription: item.item_id?.length + ' ' + item.item_id?.gauge,
