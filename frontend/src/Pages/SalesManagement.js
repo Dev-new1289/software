@@ -189,13 +189,16 @@ const SalesManagement = () => {
         date: new Date(convertedDate),
         customer: sale.cust_id?.customer_name || sale.customerNameWithAreaAndGroup || '',
         area: customerDetails.area || '',
-        items: saleItems.map(item => ({
-          ...item,
-          itemDescription: item.item_id?.length + ' ' + item.item_id?.gauge,
-          qty: item.quantity,
-          rate: item.rate,
-          amount: item.quantity * item.rate,
-        })),
+        items: saleItems
+          .slice() // create a shallow copy to avoid mutating original
+          .sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0))
+          .map(item => ({
+            ...item,
+            itemDescription: item.item_id?.length + ' ' + item.item_id?.gauge,
+            qty: item.quantity,
+            rate: item.rate,
+            amount: item.quantity * item.rate,
+          })),
         netAmount,
         specialLess: sale.special_less,
         lessAmount,
